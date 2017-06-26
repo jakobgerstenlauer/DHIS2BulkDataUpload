@@ -1,0 +1,141 @@
+@CHARSET "ISO-8859-1";
+
+/*----------------------------------------------------------------------------*/
+/* Organisation Unit Web Tree                                                 */
+/*----------------------------------------------------------------------------*/
+
+div#orgUnitTree {
+    height: 75%;
+    border: 1px solid #e3e3e3;
+	margin-left: 0px;
+}
+
+div#orgUnitTree 
+{
+  font-size: 9pt;
+  padding-top: 4px;
+}
+
+div#orgUnitTree 
+{
+  font-size: 9pt;
+  background-color: white;
+  overflow: auto;
+  width: 350px;
+  height: 400px;
+  border-top: 1px solid #e3e3e3;
+  border-bottom: 1px solid #e3e3e3;
+}
+
+div#orgUnitTree ul 
+{
+  margin: 0;
+  padding: 0;
+}
+
+div#orgUnitTree ul li:last-child 
+{
+  background-position: 0pt -1766px;
+}
+
+div#orgUnitTree li 
+{
+  list-style-type: none;
+  white-space: nowrap;
+  margin-top: 0;
+  padding: 0 0 1px 15px;
+  background-color: transparent;
+  background-image: url('../../images/treeview-gray-line.gif');
+  background-repeat: no-repeat;
+  background-attachment: scroll;
+  background-position: 0pt 0pt;
+}
+
+div#orgUnitTree span.toggle 
+{
+  margin-left: -12px;
+  cursor: pointer;
+}
+
+div#orgUnitTree a 
+{
+  display: inline;
+  border: 0;
+  padding: 0;
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+div#orgUnitTree a:hover 
+{
+  color: #555;
+  background-color: #fff;
+}
+
+div#orgUnitTree a.selected 
+{
+  color: orange !important;
+  font-weight: bold;
+}
+
+/*----------------------------------------------------------------------------*/
+/* Organisation Unit Selection Tree                                           */
+/*----------------------------------------------------------------------------*/
+
+div#selectionTree 
+{
+  font-size: 9pt; /* Size to change */
+  background-color: white;
+  height: 300px;
+  width: 493px;  
+  overflow: auto;
+  border: 1px solid #ccc;   
+  padding: 4px 0 0 5px;
+}
+
+div#selectionTree ul 
+{
+  margin: 0em 0em 0em 1.5em;
+}
+
+div#selectionTree>ul 
+{
+  margin-left: 0em;
+}
+
+div#selectionTree li 
+{
+  list-style-type: none;
+  white-space: nowrap; /* Makes list items never wrap */
+}
+
+div#selectionTree span.toggle 
+{
+  font-family: courier new, monospace;
+  font-size: 9pt; /* Size to change */
+  cursor: pointer;
+}
+
+div#selectionTree a 
+{
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+div#selectionTree a:hover 
+{
+  color: #808080;
+}
+
+div#selectionTree a.selected 
+{
+    color: orange !important;
+    font-weight: bold;
+}
+
+div#selectionTree a.locked 
+{
+  color: green;
+}

@@ -1,0 +1,20 @@
+{
+    "version": "1.0",
+    "name": "Bulk Data Upload",
+    "description": "Upload bulk data to DHIS2 using spreadsheet templates.",
+    "launch_path": "index.html",
+	"appType": "APP",
+    "icons": {
+        "48": "/img/logo.png"
+    },
+    "developer": {
+        "name": "Jakob Gerstenlauer",
+        "url": ""
+    },
+    "default_locale": "en",
+    "activities": {
+        "dhis": {
+            "href": "*"
+        }
+    }
+}
