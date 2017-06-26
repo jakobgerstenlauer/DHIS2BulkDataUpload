@@ -131,6 +131,9 @@ var dataElementsHasOptionSet = new Map();
 //The set of programs the user can access.
 let userPrograms = new Set();
 
+//The set of datasets the user can access.
+let userDataSets = new Set();
+
 //The set of non-official organisations.
 let nonOfficialOrgs = new Set();
 
@@ -375,20 +378,27 @@ function queryUserRoles() {
 function queryDataSetsApi() {
 	
 	var dataSetCounter = 1000;
+	var authorizedDataSets = 0;
 	
 	//$("#rightBar").show();
-    $.getJSON(apiBaseUrl+"/dataSets.json?fields=dataSets", 
+    $.getJSON(apiBaseUrl+"/dataSets.json?paging=false&field=dataSets", 
 	function (json) {
     	dataSetCounter = json.dataSets.length;
     	$.each( json.dataSets, function( key, val ) {			
 			//check if user has access rights for this data set			
 			if(userDataSets.has(val.id)){
 				dataSetsIDtoNAME.set(val.id, val.displayName);
+				console.log("data set id: "+val.id+" display name: "+val.displayName)
+				authorizedDataSets++;
 			}		
 			dataSetCounter--;
 		})
 	}).done(function(){	
-		if(dataSetCounter===0){
+		if(authorizedDataSets===0){
+			add("You are not authorized to edit any data sets!",4)
+			return;
+		}
+		if((dataSetCounter===0)&&(authorizedDataSets > 0)){
 			tryToCreateDataSetDropDown();
 		}else{
 			sleep(1000);
