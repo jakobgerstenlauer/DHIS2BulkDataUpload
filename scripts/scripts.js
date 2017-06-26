@@ -61,6 +61,9 @@ var optionsToQuery=0;
 // value: array of option IDs
 var optionMap = new Map();
 
+//Map used to go from data set ID to the name of the data set
+var dataSetsIDtoNAME = new Map();
+
 //Map used to go from PROGRAMID to PROGRAM NAME
 var programsIDtoNAME = new Map();
 
@@ -347,18 +350,89 @@ function queryUserRoles() {
 		$.each( json.userCredentials.userRoles, function( key, val ) { 
 			var roleId = val.id
 			//http://who-dev.essi.upc.edu:8082/api/userRoles/rtxnH4ZGLQh.json?paging=FALSE&fields=programs
-			$.getJSON(apiBaseUrl+"/userRoles/"+roleId+".json?paging=FALSE&fields=programs", 
+			$.getJSON(apiBaseUrl+"/userRoles/"+roleId+".json?paging=FALSE&fields=programs,dataSets", 
 			function (json) {      		
 				$.each( json.programs, function( key, val ) {
 					userPrograms.add(val.id,1);										
+				})
+				$.each( json.dataSets, function( key, val ) {
+					userDataSets.add(val.id,1);										
 				})
 			})
 		})
 	}).done(function(){
 		queryProgramsApi();
+		queryDataSetsApi();
 	})		
 }
 
+/**
+ *  Queries dataSets API.
+ *  Here it is assumed that the path of the properties file and the script file are identical! 
+ *  In the first step, we query the dataSets endpoint: /api/dataSets.json
+ *  We want to get a list of data elements contained in the data set.
+ */
+function queryDataSetsApi() {
+	
+	var dataSetCounter = 1000;
+	
+	//$("#rightBar").show();
+    $.getJSON(apiBaseUrl+"/dataSets.json?fields=dataSets", 
+	function (json) {
+    	dataSetCounter = json.dataSets.length;
+    	$.each( json.dataSets, function( key, val ) {			
+			//check if user has access rights for this data set			
+			if(userDataSets.has(val.id)){
+				dataSetsIDtoNAME.set(val.id, val.displayName);
+			}		
+			dataSetCounter--;
+		})
+	}).done(function(){	
+		if(dataSetCounter===0){
+			tryToCreateDataSetDropDown();
+		}else{
+			sleep(1000);
+			if(programCounter===0){
+				tryToCreateDataSetDropDown();
+			}else{
+				sleep(2000);
+				tryToCreateDataSetDropDown();
+			}
+		}
+	});		
+}
+
+function tryToCreateDataSetDropDown(){
+	var sel = document.getElementById('dataSetList');
+	if(sel && (dataSetsIDtoNAME.length > 0) ){
+		createDataSetDropDown();
+	}else{
+		sleep (1000);
+		tryToCreateDataSetDropDown();
+	}
+}
+
+/**
+ * Creates a drop-down list with all the programs the user has access to.
+ * 
+ * This function sleeps until the html element program list is loaded.
+ * Once it is loaded a drop down menu is created based on the available
+ * program options which depend on the user.
+ */
+function createDataSetDropDown() {	
+		if(document.getElementById('dataSetList')){
+				var sel = document.getElementById('dataSetList');
+				for (const [id,name] of dataSetsIDtoNAME.entries()) {
+						var opt = document.createElement('option');		
+						//console.log(name);	
+						opt.innerHTML = name;
+						//console.log(id);	
+						opt.value = id;
+						sel.appendChild(opt);
+				}		
+				dataSetListCreated=1;			
+		}
+}
 	
 /**
  *  Queries programs API.
