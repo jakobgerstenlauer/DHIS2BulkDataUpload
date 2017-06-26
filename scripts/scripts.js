@@ -388,14 +388,14 @@ function queryDataSetsApi() {
 			//check if user has access rights for this data set			
 			if(userDataSets.has(val.id)){
 				dataSetsIDtoNAME.set(val.id, val.displayName);
-				console.log("data set id: "+val.id+" display name: "+val.displayName)
+				console.log("data set id: "+val.id+" display name: "+val.displayName);
 				authorizedDataSets++;
 			}		
 			dataSetCounter--;
 		})
 	}).done(function(){	
 		if(authorizedDataSets===0){
-			add("You are not authorized to edit any data sets!",4)
+			add("You are not authorized to edit any data sets!",1);
 			return;
 		}
 		if((dataSetCounter===0)&&(authorizedDataSets > 0)){
