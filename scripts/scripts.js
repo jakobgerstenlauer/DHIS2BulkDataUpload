@@ -341,8 +341,9 @@ function readProperties() {
 }
 
 /**
-* Stores all  programs the user has access rights to in the set userPrograms.
-* Calls queryProgramsApi() before terminating.
+* Stores all programs the user has access rights to in the set userPrograms.
+* Stores all data sets the user has access rights to in the set userDataSets.
+* Calls queryProgramsApi() and queryDataSetsApi() before terminating.
 *
 ***/
 function queryUserRoles() {
