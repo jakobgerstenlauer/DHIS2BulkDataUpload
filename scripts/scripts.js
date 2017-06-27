@@ -356,10 +356,10 @@ function queryUserRoles() {
 			$.getJSON(apiBaseUrl+"/userRoles/"+roleId+".json?paging=FALSE&fields=programs,dataSets", 
 			function (json) {      		
 				$.each( json.programs, function( key, val ) {
-					userPrograms.add(val.id,1);										
+					userPrograms.add(val.id);										
 				})
 				$.each( json.dataSets, function( key, val ) {
-					userDataSets.add(val.id,1);										
+					userDataSets.add(val.id);										
 				})
 			})
 		})
