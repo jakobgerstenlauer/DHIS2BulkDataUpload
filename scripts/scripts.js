@@ -413,10 +413,25 @@ function queryDataSetsApi() {
 	});		
 }
 
+/**
+ * Tries to create the drop down menu for data sets.
+ * This function uses a recursive approach to create the data set drop down:
+ * First it checks if the html element 'dataSetList' was already created.
+ * If not i tries again after a time out of 1 second (recursive).
+ * Once the html element is created the function checks if the dataSetsIDtoNAME map is already filled.
+ * If so it calls the function createDataSetDropDown(), if not an error message is returned and the function stops.
+ * 
+ * @returns
+ */
 function tryToCreateDataSetDropDown(){
 	var sel = document.getElementById('dataSetList');
-	if(sel && (dataSetsIDtoNAME.length > 0) ){
-		createDataSetDropDown();
+	if(sel){
+		if(dataSetsIDtoNAME.length > 0){ 
+			createDataSetDropDown();
+		}else{
+			console.log("Error! Can not create the data set drop down! The dataSetsIDtoNAME Map is empty!")
+			return;
+		}
 	}else{
 		sleep (1000);
 		tryToCreateDataSetDropDown();
