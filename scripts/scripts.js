@@ -15,7 +15,10 @@ function genCharArray(charA, charZ) {
 
 var letters = genCharArray('A', 'Z'); // ["A", ..., "Z"]
 var orgUnit_id_metadata;
+// Should a data set be processed? Else a program has to be processed when reading in the excel file.
+var processDataSet;
 var program_id_metadata;
+var dataSet_id_metadata;
 var preImportValidationSummary = [];
 var importSummary = [];
 var isReload=0;
@@ -1459,28 +1462,59 @@ function isNullOrUndefined(variable) {
  * @returns Boolean value if meta data is consistent.
  */
 function isMetaDataValid(){
+	
+	processDataSet = false;
+	
+	//[].concat.apply([],["DataSetId", " ","DataSetName","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
+	//[].concat.apply([],[dataSet_id, ,dataSet_name, org_unit_name, org_unit_id, non_off_org_unit, non_off_org_unit_id, dataElementsIDs_Array])
+	//[].concat.apply([],["ProgramId", "ProgramStage", "ProgramDescription","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
+
+	//Decide first, if the data upload should be run for a program or for a data set.
+	if(isNullOrUndefinedOrEmptyString(metaDataArray[0].ProgramId)){
+		if(isNullOrUndefinedOrEmptyString(metaDataArray[0].DataSetId)){
+			add("Error! There is neither a valid program id nor a data set id in the metadata spreadsheet!", 4);
+			return false;
+		}else{
+			processDataSet = true;
+		}
+	}
+	
+	//get the id of the selected org unit: org_unit_id
 	orgUnit_id_metadata = metaDataArray[0].OrgUnitId;
 	console.log("org unit id excel: " + orgUnit_id_metadata);
 	console.log("org unit id form: " + org_unit_id);
 	
-	program_id_metadata = metaDataArray[0].ProgramId;
-	console.log("program id excel: " + program_id_metadata);
-				
-	//get the id of the selected program
-	var program_id_form=$("#programList").val();
-	console.log("program id form: " + program_id_form);
-	//get the id of the selected org unit: org_unit_id
-	
-	//test if the ids of program and org unit match with metadata in third sheet
-	if(!(program_id_metadata === program_id_form)){
-		add("Error! The selected program id: "+program_id_form+" does not match the id in the spreadsheet: " +program_id_metadata+" !", 4);
-		console.log("Error! The selected program id: "+program_id_form+" does not match the id in the spreadsheet: " +program_id_metadata+" !");
-		return false;
-	}
 	if(!(orgUnit_id_metadata === org_unit_id)){
 		add("Error! The selected org unit id: "+org_unit_id+" does not match the id in the spreadsheet: " +orgUnit_id_metadata+" !", 4);
-		console.log("Error! The selected org unit id: "+org_unit_id+" does not match the id in the spreadsheet: " +orgUnit_id_metadata+" !");
 		return false;
+	}
+	
+	if(processDataSet){
+		dataSet_id_metadata = metaDataArray[0].DataSetId;
+		console.log("data set id excel: " + dataSet_id_metadata);
+					
+		//get the id of the selected data set
+		var dataSet_id_form=$("#dataSetList").val();
+		console.log("dataSet id form: " + dataSet_id_form);
+		
+		//test if the ids of the data set matches with the metadata in the third sheet
+		if(!(dataSet_id_metadata === dataSet_id_form)){
+			add("Error! The selected data set id: "+ dataSet_id_form+" does not match the id in the spreadsheet: " +dataSet_id_metadata+" !", 4);
+			return false;
+		}
+	}else{
+		program_id_metadata = metaDataArray[0].ProgramId;
+		console.log("program id excel: " + program_id_metadata);
+					
+		//get the id of the selected program
+		var program_id_form=$("#programList").val();
+		console.log("program id form: " + program_id_form);
+		
+		//test if the program id matches with metadata in third sheet
+		if(!(program_id_metadata === program_id_form)){
+			add("Error! The selected program id: "+program_id_form+" does not match the id in the spreadsheet: " +program_id_metadata+" !", 4);
+			return false;
+		}
 	}
 	return true;
 }
