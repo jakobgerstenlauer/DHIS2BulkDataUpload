@@ -1000,17 +1000,21 @@ function getSpreadsheet(forDataSet) {
 		  console.log(key + ' = ' + value);
 	}
 	
-	//Here we order the data elements according to the order of the sections of the program
+	//Here we order the data elements according to the order of the sections of the program.
 	var i = 0;
 	for (var [key, value] of sectionDataElementMap.entries()) {
 		 var arrayOfDataElementIDs = value;		 
 		 console.log("dataElements: "+ arrayOfDataElementIDs.toString())
-		    		 
-		 for(let programStageDataElement of arrayOfDataElementIDs){		
+		 for(let dataElementId of arrayOfDataElementIDs){		
 			dataElementsSectionLabel_Array[i]= sectionDisplayNameMap.get(key);
-			//translate from the program stage data element ID to the data element ID
-		 	var dataElement = programStageDataElementMap.get(programStageDataElement);		 	
-		 	console.log("i: "+i+" program stage data element: "+programStageDataElement+" dataElement: "+dataElement+" label: "+ dataElementsLabel.get(dataElement)+" description:"+dataElementsDescription.get(dataElement))
+		 	var dataElement;
+		 	if(forDataSet){
+		 		dataElement = dataElementId;
+				//Translate from the program stage data element ID to the data element ID if we are working with programs:
+		 	}else{
+		 		dataElement = programStageDataElementMap.get(dataElementId);
+		 	}
+		 	console.log("i: "+i+" program stage data element: "+dataElementId+" dataElement: "+dataElement+" label: "+ dataElementsLabel.get(dataElement)+" description:"+dataElementsDescription.get(dataElement))
 		    dataElementsLabel_Array[i]=dataElementsLabel.get(dataElement);
 			dataElementsValueType_Array[i]=dataElementsValueType.get(dataElement);
 			dataElementsIDs_Array[i]=dataElement;
