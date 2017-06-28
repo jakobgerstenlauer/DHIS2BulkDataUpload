@@ -1541,7 +1541,11 @@ function handleFile(f) {
 					console.log("Error! The metadata is not consistent!");
 					add("Error! The metadata is not consistent!", 4);
 				}else{	
-					processData().then("File was processed.");					
+					if(processDataSet){
+						processDataSet().then(add("File was processed.",1));
+					}else{
+						processProgramData().then(add("File was processed.",1));
+					}
 				}
 			};
 		})(f);
@@ -1577,7 +1581,7 @@ function handleFile(f) {
  * @param isTest Is this a test run?
  * @returns hasErrors Was the data incorrect and thus not sent to the event API?
  */	  
-function processData(){
+function processProgramData(){
 	return new Promise(
 			function (resolve, reject) {
 
@@ -1880,6 +1884,314 @@ function processData(){
 	)	
 }
 
+/**
+ * Process and upload data for data sets to DHIS2 Api
+ *TODO adapt code to data sets!
+ *
+ * @returns
+ */
+function processDataSet(){
+	return new Promise(
+			function (resolve, reject) {
+
+				//Should the geolocation be checked?
+				var CheckGeoLocation = document.getElementById("CheckGeoLocation").value == 1;
+				var hasErrors = false;
+				var rejected = false;		
+
+				//Define a regex pattern for the date time information for the reporting date:
+				//2016-12-01T00:00:00.000
+				var DateTimePattern = /[1-2][0-9]{3}-[0-1][0-9]-[0-3][0-9]T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}/;
+				
+				//Define a more simple alternative regex pattern which only describes the date
+				//2016-12-01
+				var AlternativeDateTimePattern = /[1-2][0-9]{3}-[0-1][0-9]-[0-3][0-9]/;
+				
+				dataValues = [];
+				eventDataValues = {};
+				errorString = "";
+				isAggDataAvailable = false;	
+				eventDataValues.events = [];
+				var lineNr=0;
+
+				//Iterate over all the rows, which are the inner arrays of the json array of arrays.
+				resultArray.forEach( function (arrayItem){		
+					
+					lineNr++;
+					var eventDataValue = {};
+					eventDataValue.status="COMPLETED";
+					eventDataValue.storedBy="admin";
+					eventDataValue.program = program_id;
+					eventDataValue.orgUnit = org_unit_id;	
+					var point = new Array();
+										
+					if(CheckGeoLocation){						
+						//check the first three columns (obligatory values):
+						for (const [column, label] of obligatoryDataElementsRowLabelMap.entries()) {
+
+							if(!arrayItem.hasOwnProperty(label)){
+								//if not, then we have to reject this line / this event 
+								add("The value of "+label+" in column "+column+
+										" is undefined for input line "+ lineNr +" "
+										+JSON.stringify(arrayItem), 4);
+								add("Please read the log messages attentively and fix the problem! ", 4);
+								add("You may have to set the log level to \"trace\" or \"debug\".", 4);
+								rejected=true;		
+								hasErrors=true;	
+							}						
+							switch(label){
+							case "ReportingDate": 
+								//Does the date entered match the regex pattern?
+								//If not, reject the input data!
+								if((! DateTimePattern.test(arrayItem.ReportingDate)) && (! AlternativeDateTimePattern.test(arrayItem.ReportingDate))){
+									rejected=true;		
+									hasErrors=true;
+									add("Invalid reporting date/time entered: "+ arrayItem.ReportingDate ,4);
+									add("Row: "+lineNr+"->The reporting date has to be entered in the following format: 2016-12-01T00:00:00.000 !",4);
+									break;
+								}	
+
+							case "Latitude":  
+								if(isNaN(arrayItem.Latitude) || (Math.abs(parseInt(arrayItem.Latitude))>90.0)) {
+									rejected=true;		
+									hasErrors=true;
+									add("Row: "+lineNr+"->The entered value "+arrayItem.Latitude+" for latitude is not a valid number!",4);
+									break;
+								}else{
+									point[0]=arrayItem.Latitude;
+								}
+							case "Longitude": 
+								if(isNaN(arrayItem.Longitude) || (Math.abs(parseInt(arrayItem.Longitude))>180.0)) {
+									rejected=true;		
+									hasErrors=true;
+									add("Row: "+lineNr+"->The entered value "+arrayItem.Longitude+" for longitude is not a valid number!",4);
+									break;
+								}else{
+									point[1]=arrayItem.Longitude;
+								}						
+							}	
+						}		
+						
+						add("Location: "+point,1)
+						//If no polygon has been supplied for org-unit, its parent organisation
+						//and the grandparent organisation, I have to skip this test.
+						//Instead a warning is printed, because it would be better to do this test.
+						if(isNullOrUndefined(org_unit_polygon)){
+							add("Row: "+lineNr+"->Warning: No polygon information has been supplied!",3)
+							add("Warning: The supplied location can not be validated!",3)
+						}else{ 
+							//Check if the location is within any of the polygons
+							//of the org. unit:
+							if(!insideAnyPolygon(point, org_unit_polygon)){
+								add("Row: "+lineNr+"->Invalid location! The location "+point+" is not located within the polygon of the org unit "+org_unit_name+" !", 4)
+								add("The polygon of this org-unit is:"+org_unit_polygon, 2)
+								add("Row: "+lineNr+"->Fatal error! The data import is canceled!", 4);
+								rejected=true;
+								return hasErrors;
+							}
+						}			
+						if(rejected){
+							add("Row: "+lineNr+"->Fatal error! The data import is canceled!", 4);
+							add("Please read the log messages attentively and fix the problem! ", 3);
+							add("You may have to set the log level to \"trace\" or \"debug\".", 3);
+						}			
+						
+					//If the geolocation is not provided only the reporting date will be checked.
+					}else{
+						if(!arrayItem.hasOwnProperty("ReportingDate")){
+							//if not, then we have to reject this line / this event 
+							add("The value of ReportingDate in column "+column+
+									" is undefined for input line "+ lineNr +" "
+									+JSON.stringify(arrayItem), 4);
+							add("Please read the log messages attentively and fix the problem! ", 4);
+							add("You may have to set the log level to \"trace\" or \"debug\".", 4);
+							rejected=true;		
+							hasErrors=true;	
+						}
+						if((! DateTimePattern.test(arrayItem.ReportingDate)) && (! AlternativeDateTimePattern.test(arrayItem.ReportingDate))){
+							rejected=true;		
+							hasErrors=true;
+							add("Invalid reporting date/time entered: "+ arrayItem.ReportingDate ,4);
+							add("Row: "+lineNr+"->The reporting date has to be entered in the following format: 2016-12-01T00:00:00.000 !",4);
+						}	
+					}
+					
+					//This is the event timestamp.
+					eventDataValue.eventDate = arrayItem.ReportingDate;
+					eventDataValue.eventDate = eventDataValue.eventDate.replace(/['"]+/g,'');
+					eventDataValue.coordinate = {};
+					eventDataValue.coordinate.latitude = arrayItem.Latitude;
+					eventDataValue.coordinate.longitude = arrayItem.Longitude;						
+					eventDataValue.dataValues = [];						
+					
+					//Count missing data elements per row.
+					var missingDataElement=0;						
+					
+					//here all option values have to be available
+					while(optionsToQuery>0){
+						sleep(1000);		
+					}						
+					if(optionsToQuery>0){
+						add("Row: "+lineNr+"->Error: Some values of optionals are not yet available!",4);
+						rejected=true;		
+						hasErrors=true;
+					}
+
+					for(let dataElement of dataElementIDs)
+					{
+						var dv = {};
+						var label = dataElementsLabel.get(dataElement);
+						var valueType = dataElementsValueType.get(dataElement);
+						var optionSetId = dataElementsOptionSet.get(dataElement);
+						if(dataElementsHasOptionSet.get(dataElement) && isNullOrUndefinedOrEmptyString(optionSetId)){							
+							add("Row: "+lineNr+"->Error! The option set is not defined: ", optionSetId, 4);
+						}								
+						dv.dataElement = dataElement;							
+						//Test if the json object representing the row has the property label:
+						if(arrayItem.hasOwnProperty(label)){								
+							var rawData = arrayItem[label];															
+							//Depending on the type of value, 
+							//do some cleaning of the data:
+							switch (valueType) {								 
+							case "COORDINATE":
+							case "LONG_TEXT":
+							case "TEXT":
+								add("before cleaning: "+rawData, 1);
+								//Remove all inner quotes and escapes from strings
+								if(typeof rawData === "string"){
+									rawData = rawData.replace(/['"]+/g,'');
+								}else{
+									rawData = rawData.replace(/['"]+/g,'');
+								}
+								add("Row: "+lineNr+"->after cleaning: "+rawData, 1);
+								break;
+							case "INTEGER_POSITIVE":
+								add("Row: "+lineNr+"->Before cleaning: "+rawData, 1);									 
+								//Remove negative or zero values for data type INTEGER_POSITIVE
+								if(rawData<=0)rawData=void 0;
+								add("Row: "+lineNr+"->After cleaning: "+rawData, 1);
+								break;
+							case "TRUE_ONLY":
+								add("Row: "+lineNr+"->Before cleaning: "+rawData, 1);
+								if(typeof rawData === "string"){
+									rawData = rawData.replace(/['"]+/g,'');
+								}else{
+									rawData = rawData.replace(/['"]+/g,'');
+								}
+								//Using regular expressions, replace all char sequences with letters 
+								// T/t R/r U/u E/e with "true"
+								rawData.replace(/true/gi, "true");
+								if(!(isTrue.test(rawData))){
+									rawData=void 0;
+								}
+								add("Row: "+lineNr+"->After cleaning: "+rawData, 1);
+								break;
+							default:
+								add("Row: "+lineNr+"->No cleaning operation defined for data type: "+valueType, 1);
+							}								
+							//check if value is within set of valid options for option sets:
+							if(dataElementsHasOptionSet.get(dataElement))
+							{
+								add("Row: "+lineNr+"->Data element with ID:\""+dataElement+"\" label \"" + label + "\" and value type \"" + valueType +
+										"\" has option set with ID: \""+ optionSetId +"\"", 1);
+								if(optionMap.has(optionSetId)){
+									add("Row: "+lineNr+"->Option map has "+optionMap.size +" valid values.", 1);
+									var optionSet = optionMap.get(optionSetId);
+									add("Row: "+lineNr+"->Option set has "+optionSet.length+" valid values:", 1);
+									for (var i = 0; i < optionSet.length; i++) {
+										if(options.has(optionSet[i])){
+											add("Row: "+lineNr+"> Option "+i+" Id: "+optionSet[i]+" Value: "+ options.get(optionSet[i]), 1);
+										}else{
+											add("Row: "+lineNr+"->Option "+i+" Id: "+optionSet[i], 4);
+										}
+									}										
+									var valueInOptionSet = false;									
+									for (var i = 0; i < optionSet.length; i++) {											
+										if(options.has(optionSet[i])){
+											var option = options.get(optionSet[i]);
+										}else{
+											add("Row: "+lineNr+"->Option with ID: "+optionSet[i]+" is not available",4);
+											add("Row: "+lineNr+"->Available options are: ",4);
+											for (const [k,v] of options.entries()) {
+												add("key: "+k+"\tvalue: "+v, 4);
+											}	
+											rejected=true;		
+											hasErrors=true;
+											//return true;	
+										}											
+										switch (valueType) {								 
+										case "LONG_TEXT":
+										case "TEXT":
+											rawData = String(rawData);
+											//If the text string matches the option (upper/lower case is ignored)
+											if(rawData.toUpperCase() === option.toUpperCase()){
+												add("Row: "+lineNr+"->Value: "+rawData+" matches option "+option+"!",1);
+												rawData = option;
+												valueInOptionSet = true;
+												break;
+											}else{
+												add("Row: "+lineNr+"->Value: " + rawData + " does NOT match option "+option+"!",1);	
+												break;
+											}
+										default:  
+											//If the text string matches the option (upper/lower case is ignored)
+											if(rawData === option){
+												add("Row: "+lineNr+"->Value: "+rawData+" of data type "+ valueType +" matches option "+option+"!",1);
+												rawData = option;
+												valueInOptionSet = true;
+												break;
+											}else{
+												add("value: " + rawData +" of data type "+ valueType + " does NOT match option "+option+"!",1);
+												break;
+											}
+										}										   
+									}
+									if(valueInOptionSet == false){
+										add("Row: "+lineNr+"->Invalid value \""+rawData+"\" for option set: "+optionSetId, 4);
+										rejected=true;		
+										hasErrors=true;
+									}
+								}else{
+									add("Row: "+lineNr+"->Error! No options defined for option set with ID: "+optionSetId, 4);
+								}
+							}
+							dv.value = rawData;
+							if(!rejected){
+								eventDataValue.dataValues.push(dv);
+							}
+						}else{	
+							missingDataElement++;
+							//Abort if an obligatory data element is missing
+							//or if all data elements are missing.
+							if((dataElementsCompulsory.get(dataElement)==true)||(missingDataElement==dataElementsLabel.size)){
+								if(dataElementsCompulsory.get(dataElement)==true){
+									add("Row: "+lineNr+"->The value of the compulsory "+label+" in column "+column+
+											" is undefined for input line "+ lineNr +" "
+											+JSON.stringify(arrayItem), 4);
+								}else{
+									add("Row: "+lineNr+"->No single data element is supplied in input line "+ lineNr +" "
+											+JSON.stringify(arrayItem), 4);
+								}
+								rejected=true;		
+								hasErrors=true;	
+							}								
+						}
+					}
+					if(!rejected){
+						eventDataValues.events.push(eventDataValue);
+					}
+				});			
+								
+				add("Processed events: "+resultArray.length, 3);
+
+				if(!rejected){					
+					importData().then(resolve());					
+				}else{
+					reject("The data upload was rejected as a whole. No data was uploaded");
+				}
+			}
+	)	
+}
 /**
  * Function checks if a given point is inside a polygon.
  * Sources:
