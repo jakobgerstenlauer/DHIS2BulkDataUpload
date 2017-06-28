@@ -437,7 +437,7 @@ function queryDataSet() {
 	function (json) {
     	$.each(json.dataSetElements, function( key, val ) {			
     		dataElementIDs.add(val.dataElement.id);
-			queryDataElement(val.dataElement.id, i);
+			queryDataElement(val.dataElement.id);
 		})
 	})
   
@@ -772,7 +772,7 @@ function retrieveProgramStageDataElements(program_stage_id){
 function queryProgramStageSections() {
 	for (var i = 0; i< programStageSectionID.length; i++){
 		console.log("Query program stage section with ID: "+programStageSectionID[i])
-		queryProgramStageSectionsInnerCall(programStageSectionID[i], i);
+		queryProgramStageSectionsInnerCall(programStageSectionID[i]);
 	};
 }
 
@@ -784,7 +784,7 @@ function queryProgramStageSections() {
  * @param i Index of array dataElement. 
  * @returns
  */
-function queryProgramStageSectionsInnerCall(sectionId, i){
+function queryProgramStageSectionsInnerCall(sectionId){
 $.getJSON(apiBaseUrl+"/programStageSections/"+ sectionId +".json?&paging=false&"+
 		"fields=programStageDataElements,displayName", function (json) {	
 			console.log(json);
@@ -808,7 +808,7 @@ $.getJSON(apiBaseUrl+"/programStageSections/"+ sectionId +".json?&paging=false&"
  */
 function queryProgramStageDataElements() {
 	for (var i = 0; i< dataElements.length; i++){
-		queryProgramStageDataElementsInnerCall(dataElements[i], i);
+		queryProgramStageDataElementsInnerCall(dataElements[i]);
 	};
 	if(programListCreated===0){
 		createDropDown();
@@ -823,13 +823,13 @@ function queryProgramStageDataElements() {
  * @param i Index of array dataElement. 
  * @returns
  */
-function queryProgramStageDataElementsInnerCall(dataElement, i){
+function queryProgramStageDataElementsInnerCall(dataElement){
 $.getJSON(apiBaseUrl+"/programStageDataElements/"+ dataElement +".json?&paging=false&"+
 		"fields=dataElement,compulsory", function (json) {
 	        programStageDataElementMap.set(dataElement,json.dataElement.id);
 			dataElementIDs.add(json.dataElement.id);
 			dataElementsCompulsory.set(dataElement,json.compulsory);
-			queryDataElement(json.dataElement.id, i);
+			queryDataElement(json.dataElement.id);
 		});
 }
 
@@ -852,7 +852,7 @@ function clearDataElementAttributes(){
  * @param i
  * @returns
  */
-function queryDataElement(dataElementId, i) {	
+function queryDataElement(dataElementId) {	
 	$.getJSON(apiBaseUrl+"/dataElements/"+ dataElementId +".json?&paging=false&"+
 	"fields=formName,valueType,description,optionSetValue,optionSet", function (json) {			
 		
