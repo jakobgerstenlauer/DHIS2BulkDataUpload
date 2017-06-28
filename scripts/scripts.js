@@ -443,6 +443,11 @@ function queryDataSet() {
   
 	$("#uploadSpreadsheet").prop("disabled",false);
 	$("#getSpreadsheetDataSet").prop("hidden",false);
+	
+	document.getElementById("getSpreadsheetDataSet").onclick = function fun() {
+        console.log("Activated getSpreadsheet button!");
+        getSpreadsheet(true);  
+    }	
 }
 
 
@@ -644,7 +649,7 @@ function queryProgramStageApi() {
 		$("#getSpreadsheet").prop("hidden",false);
 		document.getElementById("getSpreadsheet").onclick = function fun() {
 	        console.log("Activated getSpreadsheet button!");
-	        getSpreadsheet();  
+	        getSpreadsheet(false);  
 	    }			
 	}		
 }
@@ -693,7 +698,7 @@ function queryCategoryCombosApi(idCategoryCombo) {
 									if(counterNGOs===totalNumNGOs){
 										document.getElementById("getSpreadsheet").onclick = function fun() {
 									        console.log("Activated getSpreadsheet button!");
-									        getSpreadsheet();  
+									        getSpreadsheet(false);  
 									    }
 										//stop showing the loading image 
 										//$("#rightBar").hide();
@@ -951,11 +956,12 @@ function queryOption(optionId) {
 }
 
 /**
- * Creates a template spreadsheet.
- *  
+ * Generates a new template spreadsheet.
+ * 
+ * @param forDataSet Should this spreadsheet be generated for a dataset? If not it is for a program.
  * @returns
  */
-function getSpreadsheet() {
+function getSpreadsheet(forDataSet) {
 
 	console.log("Start getSpreadsheet().")
 	var numOfElements = dataElementIDs.size;
