@@ -1073,7 +1073,29 @@ function getSpreadsheet(forDataSet) {
 	if((programSelected||forDataSet) && regionalUnitSelected){
 		
 	//First row with header containing informative labels for all data elements.	  
-	var output_array_sheet_0 = [
+	var output_array_sheet_0 = [];
+	if(forDataSet){
+		output_array_sheet_0 = [
+			["This template spreadsheet was created by the Bulk Data Upload App for DHIS2."],
+			[""],
+			["How to use the app:"],
+			[""],
+			["First, select the data set and the year and month of the appropriate period as well as your organizational unit."],
+			["Next, download the spreadsheet template and fill in your data in the first sheet."],
+			["Have a look at the third sheet (\"Legend\") which explains template structure and expected values."],
+			["Be sure to supply only values in the correct format and with appropriate value types."],
+			["Then, select the updated spreadsheet and upload it to the DHIS system."],
+			["You do not have to upload the spreadsheet with the data in the same session."],
+			["However, if you upload it later on, be sure to choose the correct program and org unit."],
+			["The app will reject the spreadsheet if program id and org unit do not coincide with the metadata in the \"Metadata\" sheet."],
+			["Check if there are any error messages."],
+			["If there are errors, you may change the log level to \"debug\" using the button blow the text window to gain more information about possible inconsistencies in the data."],
+			["Fix the spreadsheet before giving it another try."],		
+			["Note that the data upload may take some time and your browser may warn you that the app is unresponsive."],
+			["Please ignore this browser warning and keep waiting for the app to respond."]
+		];
+	}else{
+		output_array_sheet_0 = [
 		["This template spreadsheet was created by the Bulk Data Upload App for DHIS2."],
 		[""],
 		["How to use the app:"],
@@ -1093,7 +1115,8 @@ function getSpreadsheet(forDataSet) {
 		["Note that the data upload may take some time and your browser may warn you that the app is unresponsive."],
 		["Please ignore this browser warning and keep waiting for the app to respond."]
 	];
-		
+	}
+	
 	//First row with header containing informative labels for all data elements	  
 	var output_array_sheet_1 = [
 		//dataElementsSectionLabel_Array
