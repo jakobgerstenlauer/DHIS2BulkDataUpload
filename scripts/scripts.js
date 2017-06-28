@@ -415,6 +415,37 @@ function queryDataSetsApi() {
 	});		
 }
 
+function queryDataSet() {
+	
+	clearDataElementAttributes();
+	
+	//Make the get spreadsheet button invisible.
+	//This is necessary if the user had previously selected a program or data set. 
+	$("#getSpreadsheetDataSet").prop("hidden",true);
+	$("#uploadSpreadsheet").prop("disabled",true);
+	
+	//Get the id of the selected data set.
+	dataSet_id=$("#dataSetList").val();
+	console.log(dataSet_id);
+
+	//Get the name of the selected data set.
+	dataSet_name=dataSetsIDtoNAME.get(dataSet_id);
+	console.log(dataSet_name);
+	
+	//Retrieve the data elements of this data set.
+	$.getJSON(apiBaseUrl+"/dataSets/"+dataSet_id+".json?paging=false&fields=dataSetElements", 
+	function (json) {
+    	$.each(json.dataSetElements, function( key, val ) {			
+    		dataElementIDs.add(val.dataElement.id);
+			queryDataElement(val.dataElement.id, i);
+		})
+	})
+  
+	$("#uploadSpreadsheet").prop("disabled",false);
+	$("#getSpreadsheetDataSet").prop("hidden",false);
+}
+
+
 /**
  * Tries to create the drop down menu for data sets.
  * This function uses a recursive approach to create the data set drop down:
@@ -801,6 +832,18 @@ $.getJSON(apiBaseUrl+"/programStageDataElements/"+ dataElement +".json?&paging=f
 			queryDataElement(json.dataElement.id, i);
 		});
 }
+
+function clearDataElementAttributes(){
+	dataElementIDs.clear();
+	dataElementsLabel.clear();
+	dataElementsValueType.clear();
+	dataElementsDescription.clear();	
+	dataElementsHasOptionSet.clear();
+	dataElementsOptionSet.clear();	
+	queriedOptionSets.clear();
+	dataElementsHasOptionSet.clear();
+}
+
 
 /**
  * Reads label of data element i from /dataElements API.
