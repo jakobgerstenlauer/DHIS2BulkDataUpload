@@ -112,18 +112,19 @@
 					>					
 				</div>	
 				
-				<!-- List of available programs -->
+				<!-- List of available data sets -->
 				<div id="template_button_list_data_sets">
 					<form id="download_form_data_sets">
-					<select id="dataSetList">
+					<select id="dataSetList" onchange="queryDataSet()">
 					</select>					
 					<!-- Get Spreadsheet button.
 					This button is hidden. It only appears when all necessary information was entered by the user
-					and secondary information was successfully retrieved from several web apis.
-					<button hidden=true id="getSpreadsheet">Get spreadsheet template</button>
-					-->
+					and secondary information was successfully retrieved from several web apis. -->
+					<button hidden=false id="getSpreadsheetDataSet">Get spreadsheet template</button>					
 					</form>
 				</div>			
+				
+				<!-- List of available programs -->
 				<div id="template_button_list">
 					<form id="download_form">				
 					<select id="programList" onchange="queryProgramStageApi()">
