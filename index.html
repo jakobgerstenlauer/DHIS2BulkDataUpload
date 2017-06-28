@@ -115,32 +115,32 @@
 				<!-- List of available data sets -->
 				<div id="template_button_list_data_sets">
 					<form id="download_form_data_sets">
-					<select id="dataSetList" onchange="queryDataSet()">
+					<select id="dataSetList" title="Please select a dataset." onchange="queryDataSet()">
 					</select>
-					<select id="periodYear">
+					<select id="periodYear" title="Please select a year.">
 					</select>
-					<select id="periodMonth">
+					<select id="periodMonth" title="Please select a month.">
 					</select>					
 					<!-- Get Spreadsheet button.
 					This button is hidden. It only appears when all necessary information was entered by the user
 					and secondary information was successfully retrieved from several web apis. -->
-					<button hidden=false id="getSpreadsheetDataSet">Get spreadsheet template</button>					
+					<button hidden=false title="Here you can download a template spreadsheet for data upload to DHIS2." id="getSpreadsheetDataSet">Get spreadsheet template</button>					
 					</form>
 				</div>			
 				
 				<!-- List of available programs -->
 				<div id="template_button_list">
 					<form id="download_form">				
-					<select id="programList" onchange="queryProgramStageApi()">
+					<select id="programList" title="Please select a program." onchange="queryProgramStageApi()">
 					</select>
 					<!-- Drop-down menu for non-official organisations.
 					This button is hidden. It only appears if the user selects a program for non-official organisations.-->
-					<select hidden=true id="orgList" onchange="orgUnitSelected=true">
+					<select hidden=true title="Please select your organisation." id="orgList" onchange="orgUnitSelected=true">
 					</select>
 					<!-- Get Spreadsheet button.
 					This button is hidden. It only appears when all necessary information was entered by the user
 					and secondary information was successfully retrieved from several web apis.-->
-					<button hidden=false id="getSpreadsheet">Get spreadsheet template</button>
+					<button hidden=false title="Here you can download a template spreadsheet for data upload to DHIS2." id="getSpreadsheet">Get spreadsheet template</button>
 					</form>
 				</div>				
 		</header>
@@ -162,7 +162,7 @@
 				<tbody>
 					<tr>
 						<td>											
-							<div id="orgUnitTree" style="margin-left:-4px; padding-top: 4px;" onchange="regionalUnitSelected=true"></div>
+							<div id="orgUnitTree" style="margin-left:-4px; padding-top: 4px;" title="Please select your organisational unit." onchange="regionalUnitSelected=true"></div>
 						</td>
 					</tr>
 				</tbody>				
@@ -171,10 +171,10 @@
   			
   			<div class="flex-item">
 				<form id="upload_form"> 		
-					<input  disabled type="file" id="uploadSpreadsheet"  name="files[]" multiple />         			
-					<button id="testUpload">Upload </button> 
+					<input  disabled type="file" title="Please choose the file you want to upload." id="uploadSpreadsheet"  name="files[]" multiple />         			
+					<button title="Start the upload of your data." id="testUpload">Upload </button> 
 					<div>
-						<select id="CheckGeoLocation">
+						<select id="CheckGeoLocation" title="Choose if geolocation data should be processed and validated when uploading your spreadsheet.">
 						<option value=1> Latitude and longitude are provided. </option>
 						<option value=2 selected="selected"> No geolocation. </option>
 						</select>
@@ -237,16 +237,16 @@
 			</div>  			 			
   			
   			<div class="flex-item">
-  				<div id="myTextareaBox">									
+  				<div id="myTextareaBox" title="This window will inform you about the progress of your data upload.">									
 				<textarea id="myTextArea" name="LogWindow" rows="30" cols="45" readonly>
 				</textarea>									
 				</div>	
 				<form>
-				<input type="button" value="Clear log window" onclick="eraseText()"> 
+				<input type="button" title="Here you can delete the text of the window." value="Clear log window" onclick="eraseText()"> 
 				<!-- Select the trace level -->			
 				<!-- <p>For debugging, change the log level here:</p> -->
 				<div>
-						<select id="traceLevelDropDown">
+						<select title="Choose debug or trace if you want to see more details about the internal checks and the data processing of the App." id="traceLevelDropDown">
 						<option value=1> trace </option>
 						<option value=2> debug </option>
 						<option value=3 selected="selected"> info </option>
