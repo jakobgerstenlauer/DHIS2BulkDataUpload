@@ -229,9 +229,7 @@ function eraseText() {
  * @returns No return value.
  */
 function store(name, object){
-	
 	var isStringName = "isString"+name;
-	
 	if(typeof object === "string"){
 		sessionStorage.setItem(name, object);
 		sessionStorage.setItem(isStringName, true);		
@@ -1113,20 +1111,41 @@ function getSpreadsheet(forDataSet) {
 		}
 	}	
 	
-	var output_array_sheet_3 = [
+	var output_array_sheet_3; 
+	if(forDataSet){
+		//Get the id of the selected data set.
+		var dataSet_id=$("#dataSetList").val();
+		//Get the name of the selected data set.
+		var dataSet_name=dataSetsIDtoNAME.get(dataSet_id);
 		
-		// creating the header of the table	  
-		// create first table row
-		// ProgramId,GfOWfC9blOI,ProgramStage,JP8t81g0uIT,,,,
-		[].concat.apply([],["ProgramId", "ProgramStage", "ProgramDescription","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
-	  
-		// create second table row
-		//Description,Health ministry officers manage collective dwelling inspections,,,,,,
-		[].concat.apply([],[program_id, program_stage_id, program_name, org_unit_name, org_unit_id, non_off_org_unit, non_off_org_unit_id, dataElementsIDs_Array])
-
+		output_array_sheet_3 = [
+			// creating the header of the table	  
+			// create first table row
+			// ProgramId,GfOWfC9blOI,ProgramStage,JP8t81g0uIT,,,,
+			[].concat.apply([],["DataSetId", " ","DataSetName","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
+			// create second table row
+			//Description,Health ministry officers manage collective dwelling inspections,,,,,,
+			[].concat.apply([],[dataSet_id, ,dataSet_name, org_unit_name, org_unit_id, non_off_org_unit, non_off_org_unit_id, dataElementsIDs_Array])
 	];
+	}else{
+		output_array_sheet_3 = [
+				// creating the header of the table	  
+				// create first table row
+				// ProgramId,GfOWfC9blOI,ProgramStage,JP8t81g0uIT,,,,
+				[].concat.apply([],["ProgramId", "ProgramStage", "ProgramDescription","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
+				// create second table row
+				//Description,Health ministry officers manage collective dwelling inspections,,,,,,
+				[].concat.apply([],[program_id, program_stage_id, program_name, org_unit_name, org_unit_id, non_off_org_unit, non_off_org_unit_id, dataElementsIDs_Array])
+		];
+	}
 	
-	var str = program_name;
+	var str = "";
+	if(forDataSet){
+		str = dataSet_name;
+	}else{
+		str = program_name;
+	}
+	
 	str=str.replace("  ", "_");
 	str=str.replace(" ", "_");
 	str=str.replace("(", "_");
