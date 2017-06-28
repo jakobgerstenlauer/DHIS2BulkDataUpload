@@ -1157,10 +1157,10 @@ function getSpreadsheet(forDataSet) {
 		//Get the name of the selected data set.
 		var dataSet_name=dataSetsIDtoNAME.get(dataSet_id);
 		//Get the selected year for the period.
-		var period_year=$("#periodYear").val();
+		var period_year=parseInt($("#periodYear").val());
 		console.log(period_year)
 		//Get the selected month for the period.
-		var period_month=$("#periodMonth").val();
+		var period_month=parseInt($("#periodMonth").val());
 		console.log(period_month)
 		var period = period_year * 100 + period_month;	
 		console.log(period)
