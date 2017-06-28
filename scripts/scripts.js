@@ -362,7 +362,6 @@ function queryUserRoles() {
 				})
 				$.each( json.dataSets, function( key, val ) {
 					userDataSets.add(val.id);	
-					authorizedDataSets++;
 				})
 			}).done(function(){ 
 				queryDataSetsApi();
