@@ -24,6 +24,11 @@ form {
 }
 */
 
+#download_form_data_sets{
+	padding: 40px;
+	flex-direction: row;
+}
+
 #download_form{
 	padding: 40px;
 	flex-direction: row;
