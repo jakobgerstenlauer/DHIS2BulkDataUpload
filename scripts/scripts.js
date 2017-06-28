@@ -433,11 +433,14 @@ function queryDataSet() {
 	console.log(dataSet_name);
 	
 	//Retrieve the data elements of this data set.
-	$.getJSON(apiBaseUrl+"/dataSets/"+dataSet_id+".json?paging=false&fields=dataSetElements", 
+	$.getJSON(apiBaseUrl+"/dataSets/"+dataSet_id+".json?paging=false&fields=dataSetElements,sections", 
 	function (json) {
     	$.each(json.dataSetElements, function( key, val ) {			
     		dataElementIDs.add(val.dataElement.id);
 			queryDataElement(val.dataElement.id);
+		})
+		$.each(json.sections, function( key, val ) {
+			queryDataSetSections(val.id);
 		})
 	})
   
@@ -807,6 +810,25 @@ $.getJSON(apiBaseUrl+"/programStageSections/"+ sectionId +".json?&paging=false&"
 		});
 }
 
+function queryDataSetSections(sectionId){
+$.getJSON(apiBaseUrl+"/sections/"+ sectionId +".json?&paging=false&"+
+		"fields=dataElements,displayName", function (json) {	
+			console.log(json);
+			
+			//program stage data element ids
+	        var arrayOfDataElementIDs = []; 	        
+	        $.each( json.dataElements, function( key, val ) {
+	        	arrayOfDataElementIDs.push(val.id);
+			});	
+	        
+	        console.log("section id: " + sectionId + " display name: " + json.displayName);
+	        sectionDisplayNameMap.set(sectionId, json.displayName);	        
+	        
+	        console.log("Add new array of data element IDs to sectionDataElementMap: "+arrayOfDataElementIDs.toString())
+			sectionDataElementMap.set(sectionId, arrayOfDataElementIDs);
+		});
+}
+
 /**
  * Query the program stage endpoint for all program stage data elements (elements of the array dataElements).
  * @return No return value.
@@ -847,6 +869,8 @@ function clearDataElementAttributes(){
 	dataElementsOptionSet.clear();	
 	queriedOptionSets.clear();
 	dataElementsHasOptionSet.clear();
+	sectionDisplayNameMap.clear();
+	sectionDataElementMap.clear();
 }
 
 
@@ -1005,7 +1029,7 @@ function getSpreadsheet(forDataSet) {
 		non_off_org_unit_id="not applicable";
 	}
 	
-	if(programSelected && regionalUnitSelected){
+	if((programSelected||forDataSet) && regionalUnitSelected){
 		
 	//First row with header containing informative labels for all data elements.	  
 	var output_array_sheet_0 = [
