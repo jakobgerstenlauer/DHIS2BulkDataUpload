@@ -353,6 +353,7 @@ function queryUserRoles() {
 	function (json) {      
 		$.each( json.userCredentials.userRoles, function( key, val ) { 
 			var roleId = val.id
+			
 			//http://who-dev.essi.upc.edu:8082/api/userRoles/rtxnH4ZGLQh.json?paging=FALSE&fields=programs
 			$.getJSON(apiBaseUrl+"/userRoles/"+roleId+".json?paging=FALSE&fields=programs,dataSets", 
 			function (json) {      		
@@ -360,13 +361,15 @@ function queryUserRoles() {
 					userPrograms.add(val.id);										
 				})
 				$.each( json.dataSets, function( key, val ) {
-					userDataSets.add(val.id);										
+					userDataSets.add(val.id);	
+					authorizedDataSets++;
 				})
+			}).done(function(){ 
+				queryDataSetsApi();
 			})
 		})
 	}).done(function(){
 		queryProgramsApi();
-		queryDataSetsApi();
 	})		
 }
 
@@ -426,7 +429,7 @@ function queryDataSetsApi() {
 function tryToCreateDataSetDropDown(){
 	var sel = document.getElementById('dataSetList');
 	if(sel){
-		if(dataSetsIDtoNAME.length > 0){ 
+		if(dataSetsIDtoNAME.size > 0){ 
 			createDataSetDropDown();
 		}else{
 			console.log("Error! Can not create the data set drop down! The dataSetsIDtoNAME Map is empty!")
@@ -956,7 +959,7 @@ function getSpreadsheet() {
 	
 	if(programSelected && regionalUnitSelected){
 		
-	//first row with header containing informative labels for all data elements	  
+	//First row with header containing informative labels for all data elements.	  
 	var output_array_sheet_0 = [
 		["This template spreadsheet was created by the Bulk Data Upload App for DHIS2."],
 		[""],
@@ -978,7 +981,7 @@ function getSpreadsheet() {
 		["Please ignore this browser warning and keep waiting for the app to respond."]
 	];
 		
-	//first row with header containing informative labels for all data elements	  
+	//First row with header containing informative labels for all data elements	  
 	var output_array_sheet_1 = [
 		//dataElementsSectionLabel_Array
 		[].concat.apply([],["ReportingDate","Latitude","Longitude",dataElementsLabel_Array]),
@@ -1060,9 +1063,63 @@ function getSpreadsheet() {
 	
 	var workbook = new Workbook();
 	ws0 = sheet_from_array_of_arrays(output_array_sheet_0);
+	ws0['!protect'] = {
+	selectLockedCells : true,
+	selectUnlockedCells: true,
+	formatCells: true,
+	formatColumns: true, 
+	formatRows: true, 
+	insertColumns: true,
+	insertRows: true,
+	insertHyperlinks: true,
+	deleteColumns: true,
+	deleteRows: true,
+	sort: true,
+	autoFilter: true,
+	pivotTables: true,
+	objects: true,
+	scenarios: true
+	}
+	
 	ws1 = sheet_from_array_of_arrays(output_array_sheet_1);
+	
 	ws2 = sheet_from_array_of_arrays(output_array_sheet_2);
+	ws2['!protect'] = {
+			selectLockedCells : true,
+			selectUnlockedCells: true,
+			formatCells: true,
+			formatColumns: true, 
+			formatRows: true, 
+			insertColumns: true,
+			insertRows: true,
+			insertHyperlinks: true,
+			deleteColumns: true,
+			deleteRows: true,
+			sort: true,
+			autoFilter: true,
+			pivotTables: true,
+			objects: true,
+			scenarios: true
+			}
+	
 	ws3 = sheet_from_array_of_arrays(output_array_sheet_3);
+	ws3['!protect'] = {
+			selectLockedCells : true,
+			selectUnlockedCells: true,
+			formatCells: true,
+			formatColumns: true, 
+			formatRows: true, 
+			insertColumns: true,
+			insertRows: true,
+			insertHyperlinks: true,
+			deleteColumns: true,
+			deleteRows: true,
+			sort: true,
+			autoFilter: true,
+			pivotTables: true,
+			objects: true,
+			scenarios: true
+			}
 	
 	/* add worksheet 0 to workbook */
 	workbook.SheetNames.push(ws0_name);
