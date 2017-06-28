@@ -1156,15 +1156,23 @@ function getSpreadsheet(forDataSet) {
 		var dataSet_id=$("#dataSetList").val();
 		//Get the name of the selected data set.
 		var dataSet_name=dataSetsIDtoNAME.get(dataSet_id);
+		//Get the selected year for the period.
+		var period_year=$("#periodYear").val();
+		console.log(period_year)
+		//Get the selected month for the period.
+		var period_month=$("#periodMonth").val();
+		console.log(period_month)
+		var period = period_year * 100 + period_month;	
+		console.log(period)
 		
 		output_array_sheet_3 = [
 			// creating the header of the table	  
 			// create first table row
 			// ProgramId,GfOWfC9blOI,ProgramStage,JP8t81g0uIT,,,,
-			[].concat.apply([],["DataSetId", " ","DataSetName","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
+			[].concat.apply([],["DataSetId","Period","DataSetName","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
 			// create second table row
 			//Description,Health ministry officers manage collective dwelling inspections,,,,,,
-			[].concat.apply([],[dataSet_id, ,dataSet_name, org_unit_name, org_unit_id, non_off_org_unit, non_off_org_unit_id, dataElementsIDs_Array])
+			[].concat.apply([],[dataSet_id, period, dataSet_name, org_unit_name, org_unit_id, non_off_org_unit, non_off_org_unit_id, dataElementsIDs_Array])
 	];
 	}else{
 		output_array_sheet_3 = [
