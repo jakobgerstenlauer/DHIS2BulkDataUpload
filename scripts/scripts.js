@@ -404,6 +404,7 @@ function queryDataSetsApi() {
 		}
 		if((dataSetCounter===0)&&(authorizedDataSets > 0)){
 			tryToCreateDataSetDropDown();
+			createPeriodDropDowns();
 		}else{
 			sleep(1000);
 			if(programCounter===0){
@@ -592,6 +593,41 @@ function createDropDown() {
 				}		
 				programListCreated=1;			
 		}
+}
+
+/**
+ * Creates a drop-down list for the year and month of the selected period.
+ */
+function createPeriodDropDowns() {
+
+		var today = new Date();
+		var yyyy = today.getFullYear();
+		
+		if(document.getElementById('periodYear')){
+				var sel = document.getElementById('periodYear');
+				
+				for (var year = yyyy; year > yyyy-100; year--) {
+						var opt = document.createElement('option');		
+						//console.log(name);	
+						opt.innerHTML = year.toString();
+						//console.log(id);	
+						opt.value = year;
+						sel.appendChild(opt);
+				}			
+		}
+		
+		if(document.getElementById('periodMonth')){
+			var sel = document.getElementById('periodMonth');
+			
+			for (var month = 1; month <= 12; month++) {
+					var opt = document.createElement('option');		
+					//console.log(name);	
+					opt.innerHTML = month.toString();
+					//console.log(id);	
+					opt.value = month;
+					sel.appendChild(opt);
+			}			
+	}
 }
 
 /**
