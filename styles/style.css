@@ -25,7 +25,7 @@ form {
 */
 
 #download_form_data_sets{
-	margin-top : 50 px;
+	margin: 50px 0px 0px 0px;
 	padding: 10px;
 	flex-direction: row;
 }
