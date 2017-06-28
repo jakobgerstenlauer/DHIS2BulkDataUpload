@@ -25,12 +25,12 @@ form {
 */
 
 #download_form_data_sets{
-	padding: 40px;
+	padding: 10px;
 	flex-direction: row;
 }
 
 #download_form{
-	padding: 40px;
+	padding: 10px;
 	flex-direction: row;
 }
 
