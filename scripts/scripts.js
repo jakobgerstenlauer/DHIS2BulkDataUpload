@@ -52,6 +52,11 @@ obligatoryDataElementsRowLabelMap.set(1,"ReportingDate");
 obligatoryDataElementsRowLabelMap.set(2,"Latitude");
 obligatoryDataElementsRowLabelMap.set(3,"Longitude");
 
+//obligatory data elements: key: column, value: label
+var obligatoryDataElementsRowLabelMapDataSets = new Map();
+obligatoryDataElementsRowLabelMap.set(1,"Latitude");
+obligatoryDataElementsRowLabelMap.set(2,"Longitude");
+
 //Stores optionSet IDs for which a query of the options has already been sent in queryDataElement().
 var queriedOptionSets = new Set();
 
@@ -1399,6 +1404,162 @@ function getCompleteData(){
 	}
 }
 
+function importDataFromDataSet(){
+
+	return new Promise(
+			function (resolve, reject) {
+
+				$.ajax({
+					method: "POST",
+					type: 'post',
+					url: apiBaseUrl + "/dataValueSets?dryRun=true",
+					contentType: "application/json; charset=utf-8",
+					data: JSON.stringify(eventDataValues),
+					dataType: 'json',
+					headers:{
+						'Accept': 'application/json',
+						'Content-Type': 'application/json'
+					},	
+					async: false
+				}).done(function(res) {						
+					add(res.message,3);
+					add(res.httpStatus,3);
+
+					var importSummaryArray = res.response.importSummaries;
+					var successfulImports = 0;
+					for (var i = 0; i < importSummaryArray.length; i++){
+						if(importSummaryArray[i].status === "SUCCESS"){
+							successfulImports++;
+						}
+					}		
+					if(successfulImports==importSummaryArray.length){
+						add("All "+ importSummaryArray.length +" row imports were successful in the dry run!", 3)
+						add("Now the real import of data starts!", 3)
+						
+						$.ajax({
+						method: "POST",
+						type: 'post',
+						url: apiBaseUrl + "/dataValueSets?dryRun=false",
+						contentType: "application/json; charset=utf-8",
+						data: JSON.stringify(eventDataValues),
+						dataType: 'json',
+						headers:{
+							'Accept': 'application/json',
+							'Content-Type': 'application/json'
+						},
+						async: false
+					}).done(function(res) {						
+						add(res.message,3);
+						add(res.httpStatus,3);
+
+						add("Total number of data elements imported: " + res.response.imported, 3);
+
+						var ignoredValues = res.response.ignored;
+						if(ignoredValues>0){
+							add("Total number of data elements ignored: " + ignoredValues, 3);
+							add("There are several errors that have to be fixed! " + ignoredValues, 3);	
+							onbeforeunload();
+							reject("There are "+ ignoredValues +" errors that have to be fixed! ");
+						}
+
+						//write import summary for each row up to max_length
+						var max_length = 100;
+						if(res.response.importSummaries.length < max_length){
+							for(var i = 0; i < res.response.importSummaries.length;i++){
+								add("row: "+i+" data elements imported: "+res.response.importSummaries[i].importCount.imported, 3);
+							}
+						}else{
+							add("Only the import results for the first "+max_length+" of "+res.response.importSummaries.length+" are shown:", 3);
+							for(var i = 0; i < max_length;i++){
+								add("row: "+i+" values imported: "+res.response.importSummaries[i].importCount.imported, 3);
+							}				
+						}	
+
+						onbeforeunload();
+						resolve("Successful data upload!");
+					})
+					.fail(function (request, textStatus, errorThrown) {
+						try
+						{			
+							add("The following request could not be processed:"+JSON.stringify(eventDataValues), 4)
+							add("Event data import response:", 3);
+							if(isNullOrUndefined(request)){
+								if(isNullOrUndefined(errorThrown)){
+									onbeforeunload();
+									reject();
+								}else{
+									onbeforeunload();
+									reject(errorThrown);
+								}
+							}else{
+								console.log(request);
+								if(isNullOrUndefined(textStatus)){
+									console.log(textStatus);
+								}
+								if(isNullOrUndefined(errorThrown)){
+									onbeforeunload();
+									reject();
+								}else{
+									console.log(errorThrown);
+									onbeforeunload();
+									reject(errorThrown);
+								}
+							}
+						}
+						catch(ex)
+						{
+							add("Something went wrong while fetching event import error summary", 4);
+							add(ex, 4);
+							console.log(ex);
+							reject("Something went wrong while fetching event import error summary");
+						}			
+					})
+					}else{
+						reject("Error: Only "+ successfulImports + " out of " + importSummaryArray.length +" imports were successful!")
+					}
+
+				})
+				.fail(function (request, textStatus, errorThrown) {
+					try
+					{			
+						add("The following request could not be processed:"+JSON.stringify(eventDataValues), 4)
+						add("Event data import response:", 3);
+						if(isNullOrUndefined(request)){
+							if(isNullOrUndefined(errorThrown)){
+								onbeforeunload();
+								reject();
+							}else{
+								onbeforeunload();
+								reject(errorThrown);
+							}
+						}else{
+							console.log(request);
+							if(isNullOrUndefined(textStatus)){
+								console.log(textStatus);
+							}
+							if(isNullOrUndefined(errorThrown)){
+								onbeforeunload();
+								reject();
+							}else{
+								console.log(errorThrown);
+								onbeforeunload();
+								reject(errorThrown);
+							}
+						}
+					}
+					catch(ex)
+					{
+						add("Something went wrong while fetching event import error summary", 4);
+						add(ex, 4);
+						console.log(ex);
+						onbeforeunload();
+						reject("Something went wrong while fetching event import error summary");
+					}			
+				})
+
+			})
+}
+
 /**
  * Sends Json collection of events to the events API and processes the import summary reply by the server.
  * 
@@ -2076,7 +2237,7 @@ function processDataSet(){
 										
 					if(CheckGeoLocation){						
 						//check the first three columns (obligatory values):
-						for (const [column, label] of obligatoryDataElementsRowLabelMap.entries()) {
+						for (const [column, label] of obligatoryDataElementsRowLabelMapDataSets.entries()) {
 
 							if(!arrayItem.hasOwnProperty(label)){
 								//if not, then we have to reject this line / this event 
@@ -2089,17 +2250,6 @@ function processDataSet(){
 								hasErrors=true;	
 							}						
 							switch(label){
-							case "ReportingDate": 
-								//Does the date entered match the regex pattern?
-								//If not, reject the input data!
-								if((! DateTimePattern.test(arrayItem.ReportingDate)) && (! AlternativeDateTimePattern.test(arrayItem.ReportingDate))){
-									rejected=true;		
-									hasErrors=true;
-									add("Invalid reporting date/time entered: "+ arrayItem.ReportingDate ,4);
-									add("Row: "+lineNr+"->The reporting date has to be entered in the following format: 2016-12-01T00:00:00.000 !",4);
-									break;
-								}	
-
 							case "Latitude":  
 								if(isNaN(arrayItem.Latitude) || (Math.abs(parseInt(arrayItem.Latitude))>90.0)) {
 									rejected=true;		
@@ -2144,30 +2294,9 @@ function processDataSet(){
 							add("Please read the log messages attentively and fix the problem! ", 3);
 							add("You may have to set the log level to \"trace\" or \"debug\".", 3);
 						}			
-						
-					//If the geolocation is not provided only the reporting date will be checked.
-					}else{
-						if(!arrayItem.hasOwnProperty("ReportingDate")){
-							//if not, then we have to reject this line / this event 
-							add("The value of ReportingDate in column "+column+
-									" is undefined for input line "+ lineNr +" "
-									+JSON.stringify(arrayItem), 4);
-							add("Please read the log messages attentively and fix the problem! ", 4);
-							add("You may have to set the log level to \"trace\" or \"debug\".", 4);
-							rejected=true;		
-							hasErrors=true;	
-						}
-						if((! DateTimePattern.test(arrayItem.ReportingDate)) && (! AlternativeDateTimePattern.test(arrayItem.ReportingDate))){
-							rejected=true;		
-							hasErrors=true;
-							add("Invalid reporting date/time entered: "+ arrayItem.ReportingDate ,4);
-							add("Row: "+lineNr+"->The reporting date has to be entered in the following format: 2016-12-01T00:00:00.000 !",4);
-						}	
 					}
 					
 					//This is the event timestamp.
-					eventDataValue.eventDate = arrayItem.ReportingDate;
-					eventDataValue.eventDate = eventDataValue.eventDate.replace(/['"]+/g,'');
 					eventDataValue.coordinate = {};
 					eventDataValue.coordinate.latitude = arrayItem.Latitude;
 					eventDataValue.coordinate.longitude = arrayItem.Longitude;						
@@ -2334,7 +2463,7 @@ function processDataSet(){
 				add("Processed events: "+resultArray.length, 3);
 
 				if(!rejected){					
-					importData().then(resolve());					
+					importDataFromDataSet().then(resolve());					
 				}else{
 					reject("The data upload was rejected as a whole. No data was uploaded");
 				}
