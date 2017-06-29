@@ -1361,6 +1361,45 @@ function getPeriod(){
 }
 
 /**
+ * Zero pdding of numbers
+ * Source: https://stackoverflow.com/questions/2998784/how-to-output-integers-with-leading-zeros-in-javascript
+ * @param num
+ * @param size
+ * @returns
+ */
+function pad(num, size) {
+    var s = "000000000" + num;
+    return s.substr(s.length-size);
+}
+
+/**
+ * Returns a string describing the selected period in a format which can be used for the "complete data" attribute.
+ * @returns a string describing the selected period in a format which can be used for the "complete data" attribute
+ */
+function getCompleteData(){
+	switch(getSelectValue ("whichPeriod")) {
+	case "4": //daily
+		var period_year=$("#periodYear").val();
+		var period_month=parseInt($("#periodMonth").val());
+		var period_day=parseInt($("#periodDay").val());
+		return(period_year+"-"+(pad(period_month, 2)).toString()+"-"+(pad(period_day, 2)).toString())
+	case "2": //monthly
+		var period_year=$("#periodYear").val();
+		var period_month=parseInt($("#periodMonth").val());
+		return(period_year+"-"+(pad(period_month, 2)).toString())
+	case "1": //yearly
+		var period_year=$("#periodYear").val();
+		return(period_year)
+    case "3": //weekly
+    	var period_year=$("#periodYear").val();
+		var period_week=parseInt($("#periodWeek").val());
+		return(period_year+"W"+(pad(period_week,2)).toString())
+    default:
+        add("Invalid value for period!"+getSelectValue ("whichPeriod"),4)
+	}
+}
+
+/**
  * Sends Json collection of events to the events API and processes the import summary reply by the server.
  * 
  * @param isTest Should the function just do a dry run?
@@ -2016,15 +2055,7 @@ function processDataSet(){
 				var CheckGeoLocation = document.getElementById("CheckGeoLocation").value == 1;
 				var hasErrors = false;
 				var rejected = false;		
-
-				//Define a regex pattern for the date time information of the period for the data set
-				//201612
-				var DateTimePattern = /[1-2][0-9]{3}-[0-1][0-9]-[0-3][0-9]T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}/;
-				
-				//Define a more simple alternative regex pattern which only describes the date
-				//2016-12-01
-				var AlternativeDateTimePattern = /[1-2][0-9]{3}-[0-1][0-9]-[0-3][0-9]/;
-				
+	
 				dataValues = [];
 				eventDataValues = {};
 				errorString = "";
@@ -2037,9 +2068,9 @@ function processDataSet(){
 					
 					lineNr++;
 					var eventDataValue = {};
-					eventDataValue.status="COMPLETED";
-					eventDataValue.storedBy="admin";
-					eventDataValue.program = program_id;
+					eventDataValue.dataSet = dataSet_id_metadata;
+					eventDataValue.completeData = getCompleteData();
+					eventDataValue.period = getPeriod();
 					eventDataValue.orgUnit = org_unit_id;	
 					var point = new Array();
 										
