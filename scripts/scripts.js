@@ -1202,6 +1202,8 @@ function getSpreadsheet(forDataSet) {
 		}
 	}	
 	
+	var period = getPeriod();
+		
 	var output_array_sheet_3; 
 	if(forDataSet){
 		//Get the id of the selected data set.
@@ -1209,8 +1211,7 @@ function getSpreadsheet(forDataSet) {
 		//Get the name of the selected data set.
 		var dataSet_name=dataSetsIDtoNAME.get(dataSet_id);
 		//Get the string describing the period for the selected data set:
-		
-		
+				
 		output_array_sheet_3 = [
 			// creating the header of the table	  
 			// create first table row
@@ -1252,21 +1253,21 @@ function getSpreadsheet(forDataSet) {
 	var workbook = new Workbook();
 	ws0 = sheet_from_array_of_arrays(output_array_sheet_0);
 	ws0['!protect'] = {
-	selectLockedCells : true,
-	selectUnlockedCells: true,
-	formatCells: true,
-	formatColumns: true, 
-	formatRows: true, 
-	insertColumns: true,
-	insertRows: true,
-	insertHyperlinks: true,
-	deleteColumns: true,
-	deleteRows: true,
-	sort: true,
-	autoFilter: true,
-	pivotTables: true,
-	objects: true,
-	scenarios: true
+			selectLockedCells : true,
+			selectUnlockedCells: true,
+			formatCells: true,
+			formatColumns: true, 
+			formatRows: true, 
+			insertColumns: true,
+			insertRows: true,
+			insertHyperlinks: true,
+			deleteColumns: true,
+			deleteRows: true,
+			sort: true,
+			autoFilter: true,
+			pivotTables: true,
+			objects: true,
+			scenarios: true
 	}
 	
 	ws1 = sheet_from_array_of_arrays(output_array_sheet_1);
