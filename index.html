@@ -119,7 +119,7 @@
 					</select>
 					<select id="whichPeriod" title="Please select in which periods data are collected." onchange="showPeriodOptions()">
 						<option value=1> yearly </option>
-						<option value=2> selected="selected"> monthly </option>
+						<option value=2 selected="selected"> monthly </option>
 						<option value=3> weekly </option>
 						<option value=4> daily </option>  	
 					</select>
@@ -127,17 +127,24 @@
 					<script>
 					function showPeriodOptions(){
 						switch(getSelectValue ("whichPeriod")) {
-						case 4: 
-							showSelectButton("periodDay")
-						case 3:
-							showSelectButton("periodWeek")
-					    case 2:
+						case "4": 
+							showSelectButton("periodDay")		
+							hideSelectButton("periodWeek")
+					    case "2":
 					    	showSelectButton("periodMonth")
-					    case 1:
+					    	hideSelectButton("periodWeek")
+					    case "1":
 					    	showSelectButton("periodYear")
+					    	hideSelectButton("periodWeek")
 					        break;
+					    case "3":
+					    	showSelectButton("periodYear")
+							showSelectButton("periodWeek")
+							hideSelectButton("periodDay")
+							hideSelectButton("periodMonth")
+							break;
 					    default:
-					        add("Invalid value for period!",4)
+					        add("Invalid value for period!"+getSelectValue ("whichPeriod"),4)
 						}
 					}
 					</script>
@@ -148,7 +155,7 @@
 					</select>					
 					<select id="periodWeek" title="Please select a calendar week." hidden=true>
 					</select>					
-					<select id="periodDay" title="Please select a calendar week." hidden=true>
+					<select id="periodDay" title="Please select a day of month." hidden=true>
 					</select>	
 					<!-- Get Spreadsheet button.
 					This button is hidden. It only appears when all necessary information was entered by the user
