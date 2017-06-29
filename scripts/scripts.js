@@ -633,7 +633,7 @@ function createPeriodDropDowns() {
 		}
 		
 		if(document.getElementById('periodWeek')){
-			var sel = document.getElementById('periodMonth');
+			var sel = document.getElementById('periodWeek');
 			
 			for (var week = 1; week <= 52; week++) {
 					var opt = document.createElement('option');		
@@ -1208,14 +1208,8 @@ function getSpreadsheet(forDataSet) {
 		var dataSet_id=$("#dataSetList").val();
 		//Get the name of the selected data set.
 		var dataSet_name=dataSetsIDtoNAME.get(dataSet_id);
-		//Get the selected year for the period.
-		var period_year=parseInt($("#periodYear").val());
-		console.log(period_year)
-		//Get the selected month for the period.
-		var period_month=parseInt($("#periodMonth").val());
-		console.log(period_month)
-		var period = period_year * 100 + period_month;	
-		console.log(period)
+		//Get the string describing the period for the selected data set:
+		
 		
 		output_array_sheet_3 = [
 			// creating the header of the table	  
@@ -1335,6 +1329,33 @@ function getSpreadsheet(forDataSet) {
 	saveAs(new Blob([s2ab(wb_out)],{type:"application/octet-stream"}), fileName)	
 	}else{
 		add("Error: Can not create spreadsheet. Either the org. unit or the program was not selected!",3);
+	}
+}
+
+/**
+ * Creates the string describing the period for the selected period type.
+ * @returns
+ */
+function getPeriod(){
+	switch(getSelectValue ("whichPeriod")) {
+	case "4": //daily
+		var period_year=parseInt($("#periodYear").val());
+		var period_month=parseInt($("#periodMonth").val());
+		var period_day=parseInt($("#periodDay").val());
+		return(period_year * 10000 + period_month * 100 + period_day)
+	case "2": //monthly
+		var period_year=parseInt($("#periodYear").val());
+		var period_month=parseInt($("#periodMonth").val());
+		return(period_year * 100 + period_month)
+	case "1": //yearly
+		var period_year=parseInt($("#periodYear").val());
+		return(period_year)
+    case "3": //weekly
+    	var period_year=$("#periodYear").val();
+		var period_week=$("#periodWeek").val();
+		return(period_year+"W"+period_week)
+    default:
+        add("Invalid value for period!"+getSelectValue ("whichPeriod"),4)
 	}
 }
 
