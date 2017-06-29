@@ -1154,24 +1154,41 @@ function getSpreadsheet(forDataSet) {
 	}
 	
 	//First row with header containing informative labels for all data elements	  
-	var output_array_sheet_1 = [
-		//dataElementsSectionLabel_Array
-		[].concat.apply([],["ReportingDate","Latitude","Longitude",dataElementsLabel_Array]),
-		[,,,,,,,,]
-	];
+	var output_array_sheet_1 = [];
+	if(forDataSet){
+		output_array_sheet_1 = [
+			//dataElementsSectionLabel_Array
+			[].concat.apply([],["Latitude","Longitude",dataElementsLabel_Array]),
+			[,,,,,,,,]
+		];
+	}else{
+		output_array_sheet_1 = [
+			//dataElementsSectionLabel_Array
+			[].concat.apply([],["ReportingDate","Latitude","Longitude",dataElementsLabel_Array]),
+			[,,,,,,,,]
+		];
+	}
 	
 	//console.log(output_array_sheet_1);
-	
-	var output_array_sheet_2 = [
+	var output_array_sheet_2 = [];
+	if(forDataSet){
+		output_array_sheet_2 = [
 		["The first row of spreadsheet 1 contains descriptive labels of all columns."],
-		[""],
-		["Fixed column:"],
-		["Reporting Date","","","Enter the date time when the data was recorded in the following format: <2016-12-01T00:00:00.000> (first December 2016)."],
-		[""],
-		["Generic columns:"],
 		[""],
 		["data element ID:","Section:","Label:","Description:","","Compulsory?","Value type:","Option set Id:","Possible values:"]
 	];
+	}else{
+		output_array_sheet_2 = [
+			["The first row of spreadsheet 1 contains descriptive labels of all columns."],
+			[""],
+			["Fixed column:"],
+			["Reporting Date","","","Enter the date time when the data was recorded in the following format: <2016-12-01T00:00:00.000> (first December 2016)."],
+			[""],
+			["Generic columns:"],
+			[""],
+			["data element ID:","Section:","Label:","Description:","","Compulsory?","Value type:","Option set Id:","Possible values:"]
+		];	
+	}
 
 	for(j = 0; j<dataElementsLabel_Array.length; j++){
 		var dataElement = dataElementsIDs_Array[j];
