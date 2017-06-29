@@ -117,10 +117,39 @@
 					<form id="download_form_data_sets">
 					<select id="dataSetList" title="Please select a dataset." onchange="queryDataSet()">
 					</select>
-					<select id="periodYear" title="Please select a year.">
+					<select id="whichPeriod" title="Please select in which periods data are collected." onchange="showPeriodOptions()">
+						<option value=1> yearly </option>
+						<option value=2> selected="selected"> monthly </option>
+						<option value=3> weekly </option>
+						<option value=4> daily </option>  	
 					</select>
-					<select id="periodMonth" title="Please select a month.">
+					
+					<script>
+					function showPeriodOptions(){
+						switch(getSelectValue ("whichPeriod")) {
+						case 4: 
+							showSelectButton("periodDay")
+						case 3:
+							showSelectButton("periodWeek")
+					    case 2:
+					    	showSelectButton("periodMonth")
+					    case 1:
+					    	showSelectButton("periodYear")
+					        break;
+					    default:
+					        add("Invalid value for period!",4)
+						}
+					}
+					</script>
+					
+					<select id="periodYear" title="Please select a year." hidden=true >
+					</select>
+					<select id="periodMonth" title="Please select a month." hidden=true>
 					</select>					
+					<select id="periodWeek" title="Please select a calendar week." hidden=true>
+					</select>					
+					<select id="periodDay" title="Please select a calendar week." hidden=true>
+					</select>	
 					<!-- Get Spreadsheet button.
 					This button is hidden. It only appears when all necessary information was entered by the user
 					and secondary information was successfully retrieved from several web apis. -->

@@ -33,6 +33,8 @@ var dataValues = [];
 var eventDataValues = [];
 var errorString = "";
 var hasErrors = false;
+//dataset period of data collection
+var periodType;
 
 //Map used to go from PROGRAMID to Category Combo
 var programsIDtoCategoryCombo = new Map();
@@ -435,8 +437,9 @@ function queryDataSet() {
 	console.log(dataSet_name);
 	
 	//Retrieve the data elements of this data set.
-	$.getJSON(apiBaseUrl+"/dataSets/"+dataSet_id+".json?paging=false&fields=dataSetElements,sections", 
+	$.getJSON(apiBaseUrl+"/dataSets/"+dataSet_id+".json?paging=false&fields=dataSetElements,sections,periodType", 
 	function (json) {
+		periodType = json.periodType;
     	$.each(json.dataSetElements, function( key, val ) {			
     		dataElementIDs.add(val.dataElement.id);
 			queryDataElement(val.dataElement.id);
@@ -627,7 +630,33 @@ function createPeriodDropDowns() {
 					opt.value = month;
 					sel.appendChild(opt);
 			}			
-	}
+		}
+		
+		if(document.getElementById('periodWeek')){
+			var sel = document.getElementById('periodMonth');
+			
+			for (var week = 1; week <= 52; week++) {
+					var opt = document.createElement('option');		
+					//console.log(name);	
+					opt.innerHTML = week.toString();
+					//console.log(id);	
+					opt.value = week;
+					sel.appendChild(opt);
+			}			
+		}
+		
+		if(document.getElementById('periodDay')){
+			var sel = document.getElementById('periodDay');
+			
+			for (var day = 1; day <= 31; day++) {
+					var opt = document.createElement('option');		
+					//console.log(name);	
+					opt.innerHTML = day.toString();
+					//console.log(id);	
+					opt.value = day;
+					sel.appendChild(opt);
+			}			
+		}
 }
 
 /**
@@ -1966,8 +1995,8 @@ function processDataSet(){
 				var hasErrors = false;
 				var rejected = false;		
 
-				//Define a regex pattern for the date time information for the reporting date:
-				//2016-12-01T00:00:00.000
+				//Define a regex pattern for the date time information of the period for the data set
+				//201612
 				var DateTimePattern = /[1-2][0-9]{3}-[0-1][0-9]-[0-3][0-9]T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}/;
 				
 				//Define a more simple alternative regex pattern which only describes the date
