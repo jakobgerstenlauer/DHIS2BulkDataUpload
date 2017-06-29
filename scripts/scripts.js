@@ -1334,7 +1334,7 @@ function getSpreadsheet(forDataSet) {
 
 /**
  * Creates the string describing the period for the selected period type.
- * @returns
+ * @returns A string describing the period.
  */
 function getPeriod(){
 	switch(getSelectValue ("whichPeriod")) {
@@ -1342,14 +1342,14 @@ function getPeriod(){
 		var period_year=parseInt($("#periodYear").val());
 		var period_month=parseInt($("#periodMonth").val());
 		var period_day=parseInt($("#periodDay").val());
-		return(period_year * 10000 + period_month * 100 + period_day)
+		return((period_year * 10000 + period_month * 100 + period_day).toString())
 	case "2": //monthly
 		var period_year=parseInt($("#periodYear").val());
 		var period_month=parseInt($("#periodMonth").val());
-		return(period_year * 100 + period_month)
+		return((period_year * 100 + period_month).toString())
 	case "1": //yearly
 		var period_year=parseInt($("#periodYear").val());
-		return(period_year)
+		return((period_year).toString())
     case "3": //weekly
     	var period_year=$("#periodYear").val();
 		var period_week=$("#periodWeek").val();
