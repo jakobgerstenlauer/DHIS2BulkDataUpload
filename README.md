@@ -15,25 +15,25 @@ Fix the spreadsheet before giving it another try.
 Note that the upload may take some time.
 	
 ### Organization
-index.html:			Main html page
-manifest.webapp:	Configuration file with the
-img:				Folder with images.
-scripts:			Folder with javascript scripts.
--scripts.js:		File with the main functions defined for this app.
--Blob.js:			A blob implementation by Eli Grey and Devin Samarin:
+- index.html:			Main html page
+- manifest.webapp:	Configuration file.
+- img:				Folder with images.
+- scripts:			Folder with javascript scripts.
+- scripts.js:		File with the main functions defined for this app.
+- Blob.js:			A blob implementation by Eli Grey and Devin Samarin:
 					http://purl.eligrey.com/github/Blob.js/blob/master/Blob.js
--FileSaver.js:		A file saver implementation by Eli Grey and Devin Samarin:
+- FileSaver.js:		A file saver implementation by Eli Grey and Devin Samarin:
 					http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js
--ouwt.js:			Common file with the functions needed to make the orgUnit tree work. Generic functions: getPolygon(), listenerFunction().
--md5-min.js:		File with the md5 hash-function, implemented by Paul Johnston:
+- ouwt.js:			Common file with the functions needed to make the orgUnit tree work. Generic functions: getPolygon(), listenerFunction().
+- md5-min.js:		File with the md5 hash-function, implemented by Paul Johnston:
 					http://pajhome.org.uk/crypt/md5/instructions.html
--funcxl.js:			File with functions that process spreadsheets. Generic code in to_formulae(workbook).
--xlsx.core.min:		Parser and writer functions of various spreadsheet formats:
+- funcxl.js:			File with functions that process spreadsheets. Generic code in to_formulae(workbook).
+- xlsx.core.min:		Parser and writer functions of various spreadsheet formats:
 					https://github.com/SheetJS/js-xlsx/blob/master/README.md#parsing-workbooksJavascript
-styles:				Folder with stylesheets
--styles.css:		File with the styles defined for this app
--tableStyles:		Common file with the styles of the main table
--treeStyles:		Common file with the styles used on the orgUnit tree
+- styles:				Folder with stylesheets
+- styles.css:		File with the styles defined for this app
+- tableStyles:		Common file with the styles of the main table
+- treeStyles:		Common file with the styles used on the orgUnit tree
 	
 	
 ### Updated DHIS Version:
