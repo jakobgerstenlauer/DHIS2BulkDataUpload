@@ -1,0 +1,4 @@
+*.zip
+test/
+.project
+.settings/
