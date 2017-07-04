@@ -33,8 +33,36 @@ var dataValues = [];
 var eventDataValues = [];
 var errorString = "";
 var hasErrors = false;
-//dataset period of data collection
+
+//Dataset period of data collection (has to be set to one of the possible options of the PeriodTypeEnum (below).
 var periodType;
+
+//Based on the following blog:
+//https://stijndewitt.com/2014/01/26/enums-in-javascript/
+//Usage:
+//var myPeriod = PeriodTypeEnum.MONTHLY;
+//var myCode = PeriodTypeEnum.properties[PeriodTypeEnum.MONTHLY].code; // myCode == "M"
+var PeriodTypeEnum = {
+		  DAILY: 1,
+		  WEEKLY: 2,
+		  MONTHLY: 3,
+		  YEARLY: 4,
+		  properties: {
+		    1: {name: "daily", value: 1, code: "D"},
+		    2: {name: "weekly", value: 2, code: "W"},
+		    3: {name: "monthly", value: 3, code: "M"},
+		    4: {name: "yearly", value: 4, code: "Y"}
+		  }
+		};
+
+function getPeriodType(name){
+	switch(name){
+		case("Daily"):return PeriodTypeEnum.DAILY
+		case("Weekly"):return PeriodTypeEnum.WEEKLY
+		case("Monthly"):return PeriodTypeEnum.MONTHLY
+		case("Yearly"):return PeriodTypeEnum.YEARLY
+	}
+}
 
 //Map used to go from PROGRAMID to Category Combo
 var programsIDtoCategoryCombo = new Map();
@@ -424,6 +452,34 @@ function queryDataSetsApi() {
 	});		
 }
 
+/**
+ * Show and hide the select button depending on the corresponding period.
+ * Compare the PeriodTypeEnum definition.
+ * @returns Nothing.
+ */
+function showPeriodOptions(){
+	switch(periodType) {
+	case 1: //day
+		showSelectButton("periodDay")		
+		hideSelectButton("periodWeek")
+    case 3: //month
+    	showSelectButton("periodMonth")
+    	hideSelectButton("periodWeek")
+    case 4: //year
+    	showSelectButton("periodYear")
+    	hideSelectButton("periodWeek")
+        break;
+    case 2: //week
+    	showSelectButton("periodYear")
+		showSelectButton("periodWeek")
+		hideSelectButton("periodDay")
+		hideSelectButton("periodMonth")
+		break;
+    default:
+        add("Invalid value for period!"+getSelectValue ("whichPeriod"),4)
+	}
+}
+
 function queryDataSet() {
 	
 	clearDataElementAttributes();
@@ -444,10 +500,12 @@ function queryDataSet() {
 	//Retrieve the data elements of this data set.
 	$.getJSON(apiBaseUrl+"/dataSets/"+dataSet_id+".json?paging=false&fields=dataSetElements,sections,periodType", 
 	function (json) {
-		periodType = json.periodType;
+		periodType = getPeriodType(json.periodType);
+		showPeriodOptions(periodType);
+		console.log("Period type set to: "+ PeriodTypeEnum.properties[periodType].name)
     	$.each(json.dataSetElements, function( key, val ) {			
     		dataElementIDs.add(val.dataElement.id);
-			queryDataElement(val.dataElement.id);
+    		queryDataElement(val.dataElement.id);
 		})
 		$.each(json.sections, function( key, val ) {
 			queryDataSetSections(val.id);
@@ -1081,8 +1139,8 @@ function getSpreadsheet(forDataSet) {
 		 	var dataElement;
 		 	if(forDataSet){
 		 		dataElement = dataElementId;
-				//Translate from the program stage data element ID to the data element ID if we are working with programs:
 		 	}else{
+		 		//Translate from the program stage data element ID to the data element ID if we are working with programs:
 		 		dataElement = programStageDataElementMap.get(dataElementId);
 		 	}
 		 	console.log("i: "+i+" program stage data element: "+dataElementId+" dataElement: "+dataElement+" label: "+ dataElementsLabel.get(dataElement)+" description:"+dataElementsDescription.get(dataElement))
@@ -1104,7 +1162,7 @@ function getSpreadsheet(forDataSet) {
 		non_off_org_unit_id="not applicable";
 	}
 	
-	if((programSelected||forDataSet) && regionalUnitSelected){
+	if( (programSelected || forDataSet) && regionalUnitSelected){
 		
 	//First row with header containing informative labels for all data elements.	  
 	var output_array_sheet_0 = [];
@@ -1357,25 +1415,38 @@ function getSpreadsheet(forDataSet) {
 	}
 }
 
+//var PeriodTypeEnum = {
+//		  DAILY: 1,
+//		  WEEKLY: 2,
+//		  MONTHLY: 3,
+//		  YEARLY: 4,
+//		  properties: {
+//		    1: {name: "daily", value: 1, code: "D"},
+//		    2: {name: "weekly", value: 2, code: "W"},
+//		    3: {name: "monthly", value: 3, code: "M"},
+//		    4: {name: "yearly", value: 4, code: "Y"}
+//		  }
+//		};
+
 /**
  * Creates the string describing the period for the selected period type.
  * @returns A string describing the period.
  */
 function getPeriod(){
-	switch(getSelectValue ("whichPeriod")) {
-	case "4": //daily
+	switch(periodType) {
+	case 1: //daily
 		var period_year=parseInt($("#periodYear").val());
 		var period_month=parseInt($("#periodMonth").val());
 		var period_day=parseInt($("#periodDay").val());
 		return((period_year * 10000 + period_month * 100 + period_day).toString())
-	case "2": //monthly
+	case 3: //monthly
 		var period_year=parseInt($("#periodYear").val());
 		var period_month=parseInt($("#periodMonth").val());
 		return((period_year * 100 + period_month).toString())
-	case "1": //yearly
+	case 4: //yearly
 		var period_year=parseInt($("#periodYear").val());
 		return((period_year).toString())
-    case "3": //weekly
+    case 2: //weekly
     	var period_year=$("#periodYear").val();
 		var period_week=$("#periodWeek").val();
 		return(period_year+"W"+period_week)
@@ -2222,7 +2293,7 @@ function processProgramData(){
 }
 
 /**
- * Process and upload data for data sets to DHIS2 Api
+ *Process and upload data for data sets to DHIS2 Api
  *TODO adapt code to data sets!
  *
  * @returns

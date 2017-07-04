@@ -116,39 +116,7 @@
 				<div id="template_button_list_data_sets">
 					<form id="download_form_data_sets">
 					<select id="dataSetList" title="Please select a dataset." onchange="queryDataSet()">
-					</select>
-					<select id="whichPeriod" title="Please select in which periods data are collected." onchange="showPeriodOptions()">
-						<option value=1> yearly </option>
-						<option value=2 selected="selected"> monthly </option>
-						<option value=3> weekly </option>
-						<option value=4> daily </option>  	
-					</select>
-					
-					<script>
-					function showPeriodOptions(){
-						switch(getSelectValue ("whichPeriod")) {
-						case "4": 
-							showSelectButton("periodDay")		
-							hideSelectButton("periodWeek")
-					    case "2":
-					    	showSelectButton("periodMonth")
-					    	hideSelectButton("periodWeek")
-					    case "1":
-					    	showSelectButton("periodYear")
-					    	hideSelectButton("periodWeek")
-					        break;
-					    case "3":
-					    	showSelectButton("periodYear")
-							showSelectButton("periodWeek")
-							hideSelectButton("periodDay")
-							hideSelectButton("periodMonth")
-							break;
-					    default:
-					        add("Invalid value for period!"+getSelectValue ("whichPeriod"),4)
-						}
-					}
-					</script>
-					
+					</select>						
 					<select id="periodYear" title="Please select a year." hidden=true >
 					</select>
 					<select id="periodMonth" title="Please select a month." hidden=true>
