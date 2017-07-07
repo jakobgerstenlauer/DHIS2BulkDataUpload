@@ -12,7 +12,7 @@ function genCharArray(charA, charZ) {
     }
     return a;
 }
-
+var userName;
 var letters = genCharArray('A', 'Z'); // ["A", ..., "Z"]
 var orgUnit_id_metadata;
 // Should a data set be processed? Else a program has to be processed when reading in the excel file.
@@ -63,6 +63,15 @@ function getPeriodType(name){
 		case("Yearly"):return PeriodTypeEnum.YEARLY
 	}
 }
+
+//Map used to go from the data element ID to the Category Combo ID
+var dataElementIDsCategoryComboIDMap = new Map();
+
+//key: category combo id, value: category option combo id
+var categoryCombo_CategoryOptionCombo_Map = new Map();
+
+//key: category option combo id, value: display name
+var CategoryOptionCombo_Map = new Map();
 
 //Map used to go from PROGRAMID to Category Combo
 var programsIDtoCategoryCombo = new Map();
@@ -385,8 +394,10 @@ function readProperties() {
 function queryUserRoles() {
 	//$("#rightBar").show();
 	//http://who-dev.essi.upc.edu:8082/api/me.json?paging=FALSE&fields=userCredentials
-    $.getJSON(apiBaseUrl+"/me.json?paging=FALSE&fields=userCredentials", 
-	function (json) {      
+    $.getJSON(apiBaseUrl+"/me.json?paging=FALSE&fields=userCredentials,displayName", 
+	function (json) {   
+    	userName = json.userCredentials.username;
+		
 		$.each( json.userCredentials.userRoles, function( key, val ) { 
 			var roleId = val.id
 			
@@ -491,11 +502,11 @@ function queryDataSet() {
 	
 	//Get the id of the selected data set.
 	dataSet_id=$("#dataSetList").val();
-	console.log(dataSet_id);
+	console.log("Data set ID:" + dataSet_id);
 
 	//Get the name of the selected data set.
 	dataSet_name=dataSetsIDtoNAME.get(dataSet_id);
-	console.log(dataSet_name);
+	console.log("Data set name:" + dataSet_name);
 	
 	//Retrieve the data elements of this data set.
 	$.getJSON(apiBaseUrl+"/dataSets/"+dataSet_id+".json?paging=false&fields=dataSetElements,sections,periodType", 
@@ -505,7 +516,9 @@ function queryDataSet() {
 		console.log("Period type set to: "+ PeriodTypeEnum.properties[periodType].name)
     	$.each(json.dataSetElements, function( key, val ) {			
     		dataElementIDs.add(val.dataElement.id);
+    		dataElementIDsCategoryComboIDMap.set(val.dataElement.id, val.categoryCombo.id);
     		queryDataElement(val.dataElement.id);
+    		queryCategoryCombo(val.categoryCombo.id);
 		})
 		$.each(json.sections, function( key, val ) {
 			queryDataSetSections(val.id);
@@ -521,6 +534,40 @@ function queryDataSet() {
     }	
 }
 
+
+/**
+ * CategoryCombos:
+	http://who-dev.essi.upc.edu:8086/api/categoryCombos
+ */
+function queryCategoryCombo(categoryComboId) {
+	//Retrieve the data elements of this data set.
+	$.getJSON(apiBaseUrl+"/categoryCombos/"+categoryComboId+".json?paging=false&fields=categoryOptionCombos", 
+	function (json) {
+		
+		//an array of category option combos
+		var categoryOptions = [];
+		
+		$.each(json.categoryOptionCombos, function( key, val ) {
+			categoryOptions.push(val.id)
+    		queryCategoryOptionCombo(val.id);
+		})
+		
+		categoryCombo_CategoryOptionCombo_Map.set(categoryComboId, categoryOptions);    		
+	})
+}
+
+
+/**
+ * CategoryCombos:
+	http://who-dev.essi.upc.edu:8086/api/categoryCombos
+ */
+function queryCategoryOptionCombo(categoryOptionComboId) {
+		//Retrieve the data elements of this data set.
+		$.getJSON(apiBaseUrl+"/categoryOptionCombos/"+categoryOptionComboId+".json?paging=false&fields=displayName", 
+		function (json) {
+	    	CategoryOptionCombo_Map.set(categoryOptionComboId, json.displayName);
+	    })
+}
 
 /**
  * Tries to create the drop down menu for data sets.
@@ -950,7 +997,7 @@ $.getJSON(apiBaseUrl+"/sections/"+ sectionId +".json?&paging=false&"+
 	        	arrayOfDataElementIDs.push(val.id);
 			});	
 	        
-	        console.log("section id: " + sectionId + " display name: " + json.displayName);
+	        console.log("Section id: " + sectionId + " ;Display name: " + json.displayName);
 	        sectionDisplayNameMap.set(sectionId, json.displayName);	        
 	        
 	        console.log("Add new array of data element IDs to sectionDataElementMap: "+arrayOfDataElementIDs.toString())
@@ -1108,6 +1155,48 @@ function queryOption(optionId) {
 	});
 }
 
+function range(lowEnd, highEnd) {
+	var arr = [],
+	c = highEnd - lowEnd + 1;
+	while ( c-- ) {
+	 arr[c] = highEnd--
+	}
+	return arr;
+}
+
+function monthToString(month){
+	if(month>9)return month.toString()
+	else return "0"+month.toString()
+} 
+
+/**
+ * Creates a list of periods depending on periodType and the selected time frame
+ * @returns
+ */
+function getPeriods(){
+	switch(periodType){
+	case 4 :
+		return range(getSelectValue("periodYear"),new Date().getFullYear())
+	case 3 :
+		var selectedYear = getSelectValue("periodYear");
+		var rangeOfMonths = range(getSelectValue("periodMonth"), 12);
+		var periods = [];i=0;
+		for(let month of rangeOfMonths){
+			periods[i]=selectedYear.toString()+"-"+monthToString(month);
+			i++
+		}
+		return periods;
+	case 2 :
+		var selectedYear = getSelectValue("periodYear");
+		var rangeOfWeeks = range(getSelectValue("periodWeek"), 52);
+		var periods = [];i=0;
+		for(let week of rangeOfWeeks){
+			periods[i]=selectedYear.toString()+"-"+monthToString(week);
+			i++
+		}
+		return periods;	
+	}
+}
 /**
  * Generates a new template spreadsheet.
  * 
@@ -1162,19 +1251,42 @@ function getSpreadsheet(forDataSet) {
 		non_off_org_unit_id="not applicable";
 	}
 	
-	if( (programSelected || forDataSet) && regionalUnitSelected){
+	if( (programSelected || forDataSet) && regionalUnitSelected){		
+			
+		//First row with header containing informative labels for all data elements.	  
+		var output_array_sheet_0 = [];
 		
-	//First row with header containing informative labels for all data elements.	  
-	var output_array_sheet_0 = [];
-	if(forDataSet){
-		output_array_sheet_0 = [
+		if(forDataSet){
+			
+			output_array_sheet_0 = [
+				["This template spreadsheet was created by the Bulk Data Upload App for DHIS2."],
+				[""],
+				["How to use the app:"],
+				[""],
+				["First, select the data set and the type of period (yearly, monthly, weekly,daily)."],
+				["Then you are prompted to enter the details of the appropriate time period."],
+				["You also have to enter your organizational unit in the org. unit tree."],
+				["Next, download the spreadsheet template and fill in your data in the first sheet."],
+				["Have a look at the third sheet (\"Legend\") which explains template structure and expected values."],
+				["Be sure to supply only values in the correct format and with appropriate value types."],
+				["Then, select the updated spreadsheet and upload it to the DHIS system."],
+				["You do not have to upload the spreadsheet with the data in the same session."],
+				["However, if you upload it later on, be sure to choose the correct program and org unit."],
+				["The app will reject the spreadsheet if program id and org unit do not coincide with the metadata in the \"Metadata\" sheet."],
+				["Check if there are any error messages."],
+				["If there are errors, you may change the log level to \"debug\" using the button blow the text window to gain more information about possible inconsistencies in the data."],
+				["Fix the spreadsheet before giving it another try."],		
+				["Note that the data upload may take some time and your browser may warn you that the app is unresponsive."],
+				["Please ignore this browser warning and keep waiting for the app to respond."]
+			];
+		}else{
+			output_array_sheet_0 = [
 			["This template spreadsheet was created by the Bulk Data Upload App for DHIS2."],
 			[""],
 			["How to use the app:"],
 			[""],
-			["First, select the data set and the type of period (yearly, monthly, weekly,daily)."],
-			["Then you are prompted to enter the details of the appropriate time period."],
-			["You also have to enter your organizational unit in the org. unit tree."],
+			["First, select the program and your organizational unit."],
+			["If the program applies to NGOs you additionally have to select your NGO."],
 			["Next, download the spreadsheet template and fill in your data in the first sheet."],
 			["Have a look at the third sheet (\"Legend\") which explains template structure and expected values."],
 			["Be sure to supply only values in the correct format and with appropriate value types."],
@@ -1188,245 +1300,259 @@ function getSpreadsheet(forDataSet) {
 			["Note that the data upload may take some time and your browser may warn you that the app is unresponsive."],
 			["Please ignore this browser warning and keep waiting for the app to respond."]
 		];
-	}else{
-		output_array_sheet_0 = [
-		["This template spreadsheet was created by the Bulk Data Upload App for DHIS2."],
-		[""],
-		["How to use the app:"],
-		[""],
-		["First, select the program and your organizational unit."],
-		["If the program applies to NGOs you additionally have to select your NGO."],
-		["Next, download the spreadsheet template and fill in your data in the first sheet."],
-		["Have a look at the third sheet (\"Legend\") which explains template structure and expected values."],
-		["Be sure to supply only values in the correct format and with appropriate value types."],
-		["Then, select the updated spreadsheet and upload it to the DHIS system."],
-		["You do not have to upload the spreadsheet with the data in the same session."],
-		["However, if you upload it later on, be sure to choose the correct program and org unit."],
-		["The app will reject the spreadsheet if program id and org unit do not coincide with the metadata in the \"Metadata\" sheet."],
-		["Check if there are any error messages."],
-		["If there are errors, you may change the log level to \"debug\" using the button blow the text window to gain more information about possible inconsistencies in the data."],
-		["Fix the spreadsheet before giving it another try."],		
-		["Note that the data upload may take some time and your browser may warn you that the app is unresponsive."],
-		["Please ignore this browser warning and keep waiting for the app to respond."]
-	];
-	}
-	
-	//First row with header containing informative labels for all data elements	  
-	var output_array_sheet_1 = [];
-	if(forDataSet){
-		output_array_sheet_1 = [
-			//dataElementsSectionLabel_Array
-			[].concat.apply([],["Latitude","Longitude",dataElementsLabel_Array]),
-			[,,,,,,,,]
-		];
-	}else{
-		output_array_sheet_1 = [
-			//dataElementsSectionLabel_Array
-			[].concat.apply([],["ReportingDate","Latitude","Longitude",dataElementsLabel_Array]),
-			[,,,,,,,,]
-		];
-	}
-	
-	//console.log(output_array_sheet_1);
-	var output_array_sheet_2 = [];
-	if(forDataSet){
-		output_array_sheet_2 = [
-		["The first row of spreadsheet 1 contains descriptive labels of all columns."],
-		[""],
-		["data element ID:","Section:","Label:","Description:","","Compulsory?","Value type:","Option set Id:","Possible values:"]
-	];
-	}else{
-		output_array_sheet_2 = [
+		}
+		
+		//First row with header containing informative labels for all data elements	  
+		var output_array_sheet_1 = [];
+		
+		
+		if(forDataSet){
+			output_array_sheet_1 = [
+				//Compare the example of a CSV file which can be imported into DHIS2:
+				//https://docs.dhis2.org/master/en/developer/html/dhis2_developer_manual_full.html#webapi_sending_bulks_data_values
+//				"dataelement","period","orgunit","categoryoptioncombo","attributeoptioncombo","value"
+//				"f7n9E0hX8qk","201401","DiszpKrYNg8","bRowv6yZOF2","bRowv6yZOF2","1"
+//				"Ix2HsbDMLea","201401","DiszpKrYNg8","bRowv6yZOF2","bRowv6yZOF2","2"
+//				"eY5ehpbEsB7","201401","DiszpKrYNg8","bRowv6yZOF2","bRowv6yZOF2","3"
+				// I prepend three additional columns with labels which have to be deleted before the upload:
+
+				[].concat.apply([],["DataElementLabel","CategoryOptionComboLabel","AttributeOptionComboLabel","dataelement","period","orgunit","categoryoptioncombo","attroptioncombo","value","storedby","timestamp"])
+			];
+			
+			var date = new Date();
+			var now = date.toDateString();
+			
+			//TODO Append lines
+			//Loop over all periods
+			for(let period of getPeriods()){
+			
+				//Loop over all data elements
+				for (let dataElementID of dataElementIDs.keys()){
+					
+					var categoryComboID = dataElementIDsCategoryComboIDMap.get(dataElementID);
+					var categoryOptionCombos = categoryCombo_CategoryOptionCombo_Map.get(categoryComboID);
+						
+					//Loop over all category-option-combos
+					for(let categoryOptionComboID of categoryOptionCombos){
+						
+						var new_row = new Array(11);
+						//label of data element
+						new_row[0]=dataElementsLabel.get(dataElementID);
+						//label of the category option combo
+						new_row[1]=CategoryOptionCombo_Map.get(categoryOptionComboID);
+						//label of the attribute option combo
+						//TODO
+						new_row[2]="";
+						new_row[3]=dataElementID;
+						new_row[4]=period;
+						new_row[5]=org_unit_id;
+						new_row[6]=categoryOptionComboID;
+						//TODO: ID of the attribute option combo if applicable.
+						new_row[7]=categoryOptionComboID;
+						new_row[8]=0.0;						
+						new_row[9]=userName;		
+						new_row[10]=now;
+						//append new line with data element ID, period, orgunit, category-option-combo ID, category-option-combo name, leave rest open
+						output_array_sheet_1.push(new_row);
+					}
+				}
+			}
+		
+		}else{
+			output_array_sheet_1 = [
+				//dataElementsSectionLabel_Array
+				[].concat.apply([],["ReportingDate","Latitude","Longitude",dataElementsLabel_Array]),
+				[,,,,,,,,]
+			];
+		}
+		
+		//console.log(output_array_sheet_1);
+		var output_array_sheet_2 = [];
+		if(forDataSet){
+			output_array_sheet_2 = [
 			["The first row of spreadsheet 1 contains descriptive labels of all columns."],
 			[""],
-			["Fixed column:"],
-			["Reporting Date","","","Enter the date time when the data was recorded in the following format: <2016-12-01T00:00:00.000> (first December 2016)."],
-			[""],
-			["Generic columns:"],
-			[""],
 			["data element ID:","Section:","Label:","Description:","","Compulsory?","Value type:","Option set Id:","Possible values:"]
-		];	
-	}
-
-	for(j = 0; j<dataElementsLabel_Array.length; j++){
-		var dataElement = dataElementsIDs_Array[j];
-		if(dataElementsHasOptionSet.get(dataElement)){
-			var option_set_id = dataElementsOptionSet.get(dataElement);
-			console.log(option_set_id);
-			//array of IDs of optional values
-			var ids_of_options = optionMap.get(option_set_id);
-			console.log(ids_of_options);
-			var numOptions = ids_of_options.length;
-			console.log(numOptions);
-			var new_row = new Array(8+numOptions);
-			new_row[0]=dataElement;
-			new_row[1]=dataElementsSectionLabel_Array[j];
-			new_row[2]=dataElementsLabel_Array[j];
-			new_row[3]=dataElementsDescription_Array[j];
-			new_row[4]="";
-			new_row[5]=dataElementsCompulsory_Array[j];
-			new_row[6]=dataElementsValueType_Array[j];		
-			new_row[7]=option_set_id;
-			for(k = 0; k < numOptions; k++){
-				new_row[8+k]=options.get(ids_of_options[k]);
-			}
-			output_array_sheet_2.push(new_row);
+		];
 		}else{
-			var new_row = new Array(7);
-			new_row[0]=dataElement;
-			new_row[1]=dataElementsSectionLabel_Array[j];
-			new_row[2]=dataElementsLabel_Array[j];
-			new_row[3]=dataElementsDescription_Array[j];
-			new_row[4]="";
-			new_row[5]=dataElementsCompulsory_Array[j];
-			new_row[6]=dataElementsValueType_Array[j];	
-			output_array_sheet_2.push(new_row);			
+			output_array_sheet_2 = [
+				["The first row of spreadsheet 1 contains descriptive labels of all columns."],
+				[""],
+				["Fixed column:"],
+				["Reporting Date","","","Enter the date time when the data was recorded in the following format: <2016-12-01T00:00:00.000> (first December 2016)."],
+				[""],
+				["Generic columns:"],
+				[""],
+				["data element ID:","Section:","Label:","Description:","","Compulsory?","Value type:","Option set Id:","Possible values:"]
+			];	
 		}
-	}	
 	
-	var period = getPeriod();
+		for(j = 0; j<dataElementsLabel_Array.length; j++){
+			var dataElement = dataElementsIDs_Array[j];
+			if(dataElementsHasOptionSet.get(dataElement)){
+				var option_set_id = dataElementsOptionSet.get(dataElement);
+				console.log(option_set_id);
+				//array of IDs of optional values
+				var ids_of_options = optionMap.get(option_set_id);
+				console.log(ids_of_options);
+				var numOptions = ids_of_options.length;
+				console.log(numOptions);
+				var new_row = new Array(8+numOptions);
+				new_row[0]=dataElement;
+				new_row[1]=dataElementsSectionLabel_Array[j];
+				new_row[2]=dataElementsLabel_Array[j];
+				new_row[3]=dataElementsDescription_Array[j];
+				new_row[4]="";
+				new_row[5]=dataElementsCompulsory_Array[j];
+				new_row[6]=dataElementsValueType_Array[j];		
+				new_row[7]=option_set_id;
+				for(k = 0; k < numOptions; k++){
+					new_row[8+k]=options.get(ids_of_options[k]);
+				}
+				output_array_sheet_2.push(new_row);
+			}else{
+				var new_row = new Array(7);
+				new_row[0]=dataElement;
+				new_row[1]=dataElementsSectionLabel_Array[j];
+				new_row[2]=dataElementsLabel_Array[j];
+				new_row[3]=dataElementsDescription_Array[j];
+				new_row[4]="";
+				new_row[5]=dataElementsCompulsory_Array[j];
+				new_row[6]=dataElementsValueType_Array[j];	
+				output_array_sheet_2.push(new_row);			
+			}
+		}	
 		
-	var output_array_sheet_3; 
-	if(forDataSet){
-		//Get the id of the selected data set.
-		var dataSet_id=$("#dataSetList").val();
-		//Get the name of the selected data set.
-		var dataSet_name=dataSetsIDtoNAME.get(dataSet_id);
-		//Get the string describing the period for the selected data set:
-				
-		output_array_sheet_3 = [
-			// creating the header of the table	  
-			// create first table row
-			// ProgramId,GfOWfC9blOI,ProgramStage,JP8t81g0uIT,,,,
-			[].concat.apply([],["DataSetId","Period","DataSetName","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
-			// create second table row
-			//Description,Health ministry officers manage collective dwelling inspections,,,,,,
-			[].concat.apply([],[dataSet_id, period, dataSet_name, org_unit_name, org_unit_id, non_off_org_unit, non_off_org_unit_id, dataElementsIDs_Array])
-	];
-	}else{
-		output_array_sheet_3 = [
+		var period = getPeriod();
+			
+		var output_array_sheet_3; 
+		if(forDataSet){
+			//Get the id of the selected data set.
+			var dataSet_id=$("#dataSetList").val();
+			//Get the name of the selected data set.
+			var dataSet_name=dataSetsIDtoNAME.get(dataSet_id);
+			//Get the string describing the period for the selected data set:
+					
+			output_array_sheet_3 = [
 				// creating the header of the table	  
 				// create first table row
 				// ProgramId,GfOWfC9blOI,ProgramStage,JP8t81g0uIT,,,,
-				[].concat.apply([],["ProgramId", "ProgramStage", "ProgramDescription","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
+				[].concat.apply([],["DataSetId","Period","DataSetName","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
 				// create second table row
 				//Description,Health ministry officers manage collective dwelling inspections,,,,,,
-				[].concat.apply([],[program_id, program_stage_id, program_name, org_unit_name, org_unit_id, non_off_org_unit, non_off_org_unit_id, dataElementsIDs_Array])
+				[].concat.apply([],[dataSet_id, period, dataSet_name, org_unit_name, org_unit_id, non_off_org_unit, non_off_org_unit_id, dataElementsIDs_Array])
 		];
-	}
-	
-	var str = "";
-	if(forDataSet){
-		str = dataSet_name;
-	}else{
-		str = program_name;
-	}
-	
-	str=str.replace("  ", "_");
-	str=str.replace(" ", "_");
-	str=str.replace("(", "_");
-	str=str.replace(")", "_");
-	var fileName = "WISCC_Data_Upload_"+str+"_.xlsx"
-	var ws0_name = "Readme";	
-	var ws1_name = "WISCC_Data_Upload Data Entry Template";	
-	var ws2_name = "Legend";	
-	var ws3_name = "Metadata - Do Not Change!";	
-	
-	var workbook = new Workbook();
-	ws0 = sheet_from_array_of_arrays(output_array_sheet_0);
-	ws0['!protect'] = {
-			selectLockedCells : true,
-			selectUnlockedCells: true,
-			formatCells: true,
-			formatColumns: true, 
-			formatRows: true, 
-			insertColumns: true,
-			insertRows: true,
-			insertHyperlinks: true,
-			deleteColumns: true,
-			deleteRows: true,
-			sort: true,
-			autoFilter: true,
-			pivotTables: true,
-			objects: true,
-			scenarios: true
-	}
-	
-	ws1 = sheet_from_array_of_arrays(output_array_sheet_1);
-	
-	ws2 = sheet_from_array_of_arrays(output_array_sheet_2);
-	ws2['!protect'] = {
-			selectLockedCells : true,
-			selectUnlockedCells: true,
-			formatCells: true,
-			formatColumns: true, 
-			formatRows: true, 
-			insertColumns: true,
-			insertRows: true,
-			insertHyperlinks: true,
-			deleteColumns: true,
-			deleteRows: true,
-			sort: true,
-			autoFilter: true,
-			pivotTables: true,
-			objects: true,
-			scenarios: true
-			}
-	
-	ws3 = sheet_from_array_of_arrays(output_array_sheet_3);
-	ws3['!protect'] = {
-			selectLockedCells : true,
-			selectUnlockedCells: true,
-			formatCells: true,
-			formatColumns: true, 
-			formatRows: true, 
-			insertColumns: true,
-			insertRows: true,
-			insertHyperlinks: true,
-			deleteColumns: true,
-			deleteRows: true,
-			sort: true,
-			autoFilter: true,
-			pivotTables: true,
-			objects: true,
-			scenarios: true
-			}
-	
-	/* add worksheet 0 to workbook */
-	workbook.SheetNames.push(ws0_name);
-	workbook.Sheets[ws0_name] = ws0;
-	
-	/* add worksheet 1 to workbook */
-	workbook.SheetNames.push(ws1_name);
-	workbook.Sheets[ws1_name] = ws1;
-	
-	/* add worksheet 2 to workbook */
-	workbook.SheetNames.push(ws2_name);
-	workbook.Sheets[ws2_name] = ws2;
-	
-	/* add worksheet 3 to workbook */
-	workbook.SheetNames.push(ws3_name);
-	workbook.Sheets[ws3_name] = ws3;
-	
-	var wb_out = XLSX.write(workbook, {bookType:'xlsx', bookSST:true, type: 'binary'});	
-	saveAs(new Blob([s2ab(wb_out)],{type:"application/octet-stream"}), fileName)	
+		}else{
+			output_array_sheet_3 = [
+					// creating the header of the table	  
+					// create first table row
+					// ProgramId,GfOWfC9blOI,ProgramStage,JP8t81g0uIT,,,,
+					[].concat.apply([],["ProgramId", "ProgramStage", "ProgramDescription","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
+					// create second table row
+					//Description,Health ministry officers manage collective dwelling inspections,,,,,,
+					[].concat.apply([],[program_id, program_stage_id, program_name, org_unit_name, org_unit_id, non_off_org_unit, non_off_org_unit_id, dataElementsIDs_Array])
+			];
+		}
+		
+		var str = "";
+		if(forDataSet){
+			str = dataSet_name;
+		}else{
+			str = program_name;
+		}
+		
+		str=str.replace("  ", "_");
+		str=str.replace(" ", "_");
+		str=str.replace("(", "_");
+		str=str.replace(")", "_");
+		var fileName = "WISCC_Data_Upload_"+str+"_.xlsx"
+		var ws0_name = "Readme";	
+		var ws1_name = "WISCC_Data_Upload Data Entry Template";	
+		var ws2_name = "Legend";	
+		var ws3_name = "Metadata - Do Not Change!";	
+		
+		var workbook = new Workbook();
+		ws0 = sheet_from_array_of_arrays(output_array_sheet_0);
+		ws0['!protect'] = {
+				selectLockedCells : true,
+				selectUnlockedCells: true,
+				formatCells: true,
+				formatColumns: true, 
+				formatRows: true, 
+				insertColumns: true,
+				insertRows: true,
+				insertHyperlinks: true,
+				deleteColumns: true,
+				deleteRows: true,
+				sort: true,
+				autoFilter: true,
+				pivotTables: true,
+				objects: true,
+				scenarios: true
+		}
+		
+		ws1 = sheet_from_array_of_arrays(output_array_sheet_1);
+		
+		ws2 = sheet_from_array_of_arrays(output_array_sheet_2);
+		ws2['!protect'] = {
+				selectLockedCells : true,
+				selectUnlockedCells: true,
+				formatCells: true,
+				formatColumns: true, 
+				formatRows: true, 
+				insertColumns: true,
+				insertRows: true,
+				insertHyperlinks: true,
+				deleteColumns: true,
+				deleteRows: true,
+				sort: true,
+				autoFilter: true,
+				pivotTables: true,
+				objects: true,
+				scenarios: true
+				}
+		
+		ws3 = sheet_from_array_of_arrays(output_array_sheet_3);
+		ws3['!protect'] = {
+				selectLockedCells : true,
+				selectUnlockedCells: true,
+				formatCells: true,
+				formatColumns: true, 
+				formatRows: true, 
+				insertColumns: true,
+				insertRows: true,
+				insertHyperlinks: true,
+				deleteColumns: true,
+				deleteRows: true,
+				sort: true,
+				autoFilter: true,
+				pivotTables: true,
+				objects: true,
+				scenarios: true
+				}
+		
+		/* add worksheet 0 to workbook */
+		workbook.SheetNames.push(ws0_name);
+		workbook.Sheets[ws0_name] = ws0;
+		
+		/* add worksheet 1 to workbook */
+		workbook.SheetNames.push(ws1_name);
+		workbook.Sheets[ws1_name] = ws1;
+		
+		/* add worksheet 2 to workbook */
+		workbook.SheetNames.push(ws2_name);
+		workbook.Sheets[ws2_name] = ws2;
+		
+		/* add worksheet 3 to workbook */
+		workbook.SheetNames.push(ws3_name);
+		workbook.Sheets[ws3_name] = ws3;
+		
+		var wb_out = XLSX.write(workbook, {bookType:'xlsx', bookSST:true, type: 'binary'});	
+		saveAs(new Blob([s2ab(wb_out)],{type:"application/octet-stream"}), fileName)	
 	}else{
 		add("Error: Can not create spreadsheet. Either the org. unit or the program was not selected!",3);
 	}
 }
-
-//var PeriodTypeEnum = {
-//		  DAILY: 1,
-//		  WEEKLY: 2,
-//		  MONTHLY: 3,
-//		  YEARLY: 4,
-//		  properties: {
-//		    1: {name: "daily", value: 1, code: "D"},
-//		    2: {name: "weekly", value: 2, code: "W"},
-//		    3: {name: "monthly", value: 3, code: "M"},
-//		    4: {name: "yearly", value: 4, code: "Y"}
-//		  }
-//		};
 
 /**
  * Creates the string describing the period for the selected period type.
