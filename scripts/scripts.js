@@ -1291,13 +1291,13 @@ function getCurrentTime(){
 	//Format: "2017-07-04T12:35:37.554+0000"
 	var year = date.getFullYear();
 	//Returns the month (from 0-11)
-	var month = 1 + date.getUTCMonth();
+	var month = monthToString(1 + date.getUTCMonth());
 	//Returns the day of the month, according to universal time (from 1-31)
-	var day = date.getUTCDate();
-	var hour = date.getUTCHours();
+	var day = monthToString(date.getUTCDate());
+	var hour = monthToString(date.getUTCHours());
 	//Returns the minutes (from 0-59)
-	var minutes = date.getUTCMinutes();
-	var seconds = date.getUTCSeconds();
+	var minutes = monthToString(date.getUTCMinutes());
+	var seconds = monthToString(date.getUTCSeconds());
 	var milliSeconds = date.getUTCMilliseconds();
 	return year + "-" + month + "-" + day +"T" + hour + ":" + minutes + ":" + seconds + ":" + milliSeconds + "+0000";
 }
