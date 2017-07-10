@@ -520,7 +520,7 @@ function queryDataSet() {
 	
 	//Make the get spreadsheet button invisible.
 	//This is necessary if the user had previously selected a program or data set. 
-	clearDataSetSelectButtons();
+	//clearDataSetSelectButtons();
 	
 	//Get the id of the selected data set.
 	dataSet_id=$("#dataSetList").val();
