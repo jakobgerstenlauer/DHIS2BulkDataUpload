@@ -55,6 +55,7 @@ var PeriodTypeEnum = {
 		  }
 		};
 
+
 function getPeriodType(name){
 	switch(name){
 		case("Daily"):return PeriodTypeEnum.DAILY
@@ -69,6 +70,10 @@ var dataElementIDsCategoryComboIDMap = new Map();
 
 //key: category combo id, value: category option combo id
 var categoryCombo_CategoryOptionCombo_Map = new Map();
+
+//This map stores the category options for the data set
+//key: category option combo id, value: display name
+var dataSetOptionMap = new Map();
 
 //key: category option combo id, value: display name
 var CategoryOptionCombo_Map = new Map();
@@ -220,6 +225,15 @@ var programListCreated=0;
  */
 function hideSelectButton (id) {
     document.getElementById(id).hidden = true;
+}
+
+/**
+ * Clear all values of a select button
+ * @param id
+ * @returns
+ */
+function clearSelectButton (id){
+	document.getElementById(id).options.length = 0;
 }
 
 /**
@@ -490,6 +504,15 @@ function showPeriodOptions(){
         add("Invalid value for period!"+getSelectValue ("whichPeriod"),4)
 	}
 }
+function clearDataSetSelectButtons(){
+	$("#getSpreadsheetDataSet").prop("hidden",true);
+	$("#uploadSpreadsheet").prop("disabled",true);
+	clearSelectButton("ListOfDataSetOptions");	
+	clearSelectButton("periodYear");
+	clearSelectButton("periodMonth");		
+	clearSelectButton("periodWeek");
+	clearSelectButton("periodDay");
+}
 
 function queryDataSet() {
 	
@@ -497,8 +520,7 @@ function queryDataSet() {
 	
 	//Make the get spreadsheet button invisible.
 	//This is necessary if the user had previously selected a program or data set. 
-	$("#getSpreadsheetDataSet").prop("hidden",true);
-	$("#uploadSpreadsheet").prop("disabled",true);
+	clearDataSetSelectButtons();
 	
 	//Get the id of the selected data set.
 	dataSet_id=$("#dataSetList").val();
@@ -509,8 +531,9 @@ function queryDataSet() {
 	console.log("Data set name:" + dataSet_name);
 	
 	//Retrieve the data elements of this data set.
-	$.getJSON(apiBaseUrl+"/dataSets/"+dataSet_id+".json?paging=false&fields=dataSetElements,sections,periodType", 
+	$.getJSON(apiBaseUrl+"/dataSets/"+dataSet_id+".json?paging=false&fields=dataSetElements,sections,periodType,categoryCombo", 
 	function (json) {
+		queryCategoryCombo(json.categoryCombo.id, true);
 		periodType = getPeriodType(json.periodType);
 		showPeriodOptions(periodType);
 		console.log("Period type set to: "+ PeriodTypeEnum.properties[periodType].name)
@@ -518,7 +541,7 @@ function queryDataSet() {
     		dataElementIDs.add(val.dataElement.id);
     		dataElementIDsCategoryComboIDMap.set(val.dataElement.id, val.categoryCombo.id);
     		queryDataElement(val.dataElement.id);
-    		queryCategoryCombo(val.categoryCombo.id);
+    		queryCategoryCombo(val.categoryCombo.id, false);
 		})
 		$.each(json.sections, function( key, val ) {
 			queryDataSetSections(val.id);
@@ -531,41 +554,46 @@ function queryDataSet() {
 	document.getElementById("getSpreadsheetDataSet").onclick = function fun() {
         console.log("Activated getSpreadsheet button!");
         getSpreadsheet(true);  
-    }	
+    }		
 }
 
 
 /**
+ * Queries category combos for individual data elements or for the data set as a whole.
  * CategoryCombos:
 	http://who-dev.essi.upc.edu:8086/api/categoryCombos
  */
-function queryCategoryCombo(categoryComboId) {
+function queryCategoryCombo(categoryComboId, forDataSet) {
 	//Retrieve the data elements of this data set.
 	$.getJSON(apiBaseUrl+"/categoryCombos/"+categoryComboId+".json?paging=false&fields=categoryOptionCombos", 
 	function (json) {
-		
 		//an array of category option combos
 		var categoryOptions = [];
-		
 		$.each(json.categoryOptionCombos, function( key, val ) {
 			categoryOptions.push(val.id)
-    		queryCategoryOptionCombo(val.id);
+			queryCategoryOptionCombo(val.id, forDataSet);
 		})
-		
-		categoryCombo_CategoryOptionCombo_Map.set(categoryComboId, categoryOptions);    		
+		if(forDataSet){
+			tryToCreateDataSetOptionsDropDown();
+		}else{
+			categoryCombo_CategoryOptionCombo_Map.set(categoryComboId, categoryOptions);
+		}
 	})
 }
-
 
 /**
  * CategoryCombos:
 	http://who-dev.essi.upc.edu:8086/api/categoryCombos
  */
-function queryCategoryOptionCombo(categoryOptionComboId) {
+function queryCategoryOptionCombo(categoryOptionComboId, dataSet) {
 		//Retrieve the data elements of this data set.
 		$.getJSON(apiBaseUrl+"/categoryOptionCombos/"+categoryOptionComboId+".json?paging=false&fields=displayName", 
 		function (json) {
-	    	CategoryOptionCombo_Map.set(categoryOptionComboId, json.displayName);
+			if(dataSet){
+				dataSetOptionMap.set(categoryOptionComboId, json.displayName);
+			}else{
+				CategoryOptionCombo_Map.set(categoryOptionComboId, json.displayName);
+			}
 	    })
 }
 
@@ -616,6 +644,47 @@ function createDataSetDropDown() {
 		}
 }
 	
+/**
+ * Tries to create the drop down menu for data sets.
+ * This function uses a recursive approach to create the data set drop down:
+ * First it checks if the html element 'dataSetList' was already created.
+ * If not i tries again after a time out of 1 second (recursive).
+ * Once the html element is created the function checks if the dataSetsIDtoNAME map is already filled.
+ * If so it calls the function createDataSetDropDown(), if not an error message is returned and the function stops.
+ * 
+ * @returns
+ */
+function tryToCreateDataSetOptionsDropDown(){
+	var sel = document.getElementById('ListOfDataSetOptions');
+	if(sel && (dataSetOptionMap.size > 0)){
+			createDataSetOptionsDropDown();
+	}else{
+		sleep (1000);
+		tryToCreateDataSetOptionsDropDown();
+	}
+}
+
+/**
+ * Creates a drop-down list with all the programs the user has access to.
+ * 
+ * This function sleeps until the html element program list is loaded.
+ * Once it is loaded a drop down menu is created based on the available
+ * program options which depend on the user.
+ */
+function createDataSetOptionsDropDown() {	
+		if(document.getElementById('ListOfDataSetOptions')){
+				var sel = document.getElementById('ListOfDataSetOptions');
+				for (const [id,name] of dataSetOptionMap.entries()) {
+						var opt = document.createElement('option');		
+						//console.log(name);	
+						opt.innerHTML = name;
+						//console.log(id);	
+						opt.value = id;
+						sel.appendChild(opt);
+				}				
+		}
+}
+
 /**
  *  Queries programs API.
  *  Here it is assumed that the path of the properties file and the script file are identical! 
@@ -1036,7 +1105,14 @@ $.getJSON(apiBaseUrl+"/programStageDataElements/"+ dataElement +".json?&paging=f
 		});
 }
 
+/**
+ * Clears all data structures storing metadata about the data elements of data sets.
+ * @returns
+ */
 function clearDataElementAttributes(){
+	dataElementIDsCategoryComboIDMap.clear();
+	dataSetOptionMap.clear();
+	categoryCombo_CategoryOptionCombo_Map.clear();
 	dataElementIDs.clear();
 	dataElementsLabel.clear();
 	dataElementsValueType.clear();
@@ -1308,15 +1384,13 @@ function getSpreadsheet(forDataSet) {
 		
 		if(forDataSet){
 			output_array_sheet_1 = [
-				//Compare the example of a CSV file which can be imported into DHIS2:
-				//https://docs.dhis2.org/master/en/developer/html/dhis2_developer_manual_full.html#webapi_sending_bulks_data_values
-//				"dataelement","period","orgunit","categoryoptioncombo","attributeoptioncombo","value"
-//				"f7n9E0hX8qk","201401","DiszpKrYNg8","bRowv6yZOF2","bRowv6yZOF2","1"
-//				"Ix2HsbDMLea","201401","DiszpKrYNg8","bRowv6yZOF2","bRowv6yZOF2","2"
-//				"eY5ehpbEsB7","201401","DiszpKrYNg8","bRowv6yZOF2","bRowv6yZOF2","3"
-				// I prepend three additional columns with labels which have to be deleted before the upload:
+				// Compare the example of a CSV file which can be imported into DHIS2:
+				// https://docs.dhis2.org/master/en/developer/html/dhis2_developer_manual_full.html#webapi_sending_bulks_data_values
+				// {"dataElement":"r93CGkSemDg","period":"2016","orgUnit":"uZZhXR5xxmV","categoryOptionCombo":"rUqhQb4yK70","attributeOptionCombo":"WXQU0xM4tNh","value":"5","storedBy":"admin","created":"2017-07-04T12:35:37.554+0000","lastUpdated":"2017-07-04T12:35:37.554+0000","followUp":false}
+				// I prepend two additional columns with labels which have to be deleted before the upload:
 
-				[].concat.apply([],["DataElementLabel","CategoryOptionComboLabel","AttributeOptionComboLabel","dataelement","period","orgunit","categoryoptioncombo","attroptioncombo","value","storedby","timestamp"])
+				[].concat.apply([],["DataElementLabel","OptionLabel",
+					"dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value","storedBy","created","lastUpdated","followUp"])
 			];
 			
 			var date = new Date();
@@ -1340,18 +1414,24 @@ function getSpreadsheet(forDataSet) {
 						new_row[0]=dataElementsLabel.get(dataElementID);
 						//label of the category option combo
 						new_row[1]=CategoryOptionCombo_Map.get(categoryOptionComboID);
-						//label of the attribute option combo
-						//TODO
-						new_row[2]="";
-						new_row[3]=dataElementID;
-						new_row[4]=period;
-						new_row[5]=org_unit_id;
-						new_row[6]=categoryOptionComboID;
-						//TODO: ID of the attribute option combo if applicable.
-						new_row[7]=categoryOptionComboID;
-						new_row[8]=0.0;						
+						
+						new_row[2]=dataElementID;
+						new_row[3]=period;
+						new_row[4]=org_unit_id;
+						new_row[5]=categoryOptionComboID;
+						//TODO Retrieve from select button:
+						//ID of the attribute option combo:
+						new_row[6]=attributeOptionComboID;
+						//value
+						new_row[7]=0.0;						
+						//stored by
 						new_row[9]=userName;		
+						//created
 						new_row[10]=now;
+						//last updated
+						new_row[11]=now;
+						//follow up
+						new_row[12]=false;
 						//append new line with data element ID, period, orgunit, category-option-combo ID, category-option-combo name, leave rest open
 						output_array_sheet_1.push(new_row);
 					}
