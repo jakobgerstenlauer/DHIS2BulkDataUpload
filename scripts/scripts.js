@@ -12,6 +12,8 @@ function genCharArray(charA, charZ) {
     }
     return a;
 }
+//number of different aggregation categories for the chosen data set
+var dataSetOptions;
 var userName;
 var letters = genCharArray('A', 'Z'); // ["A", ..., "Z"]
 var orgUnit_id_metadata;
@@ -508,10 +510,10 @@ function clearDataSetSelectButtons(){
 	$("#getSpreadsheetDataSet").prop("hidden",true);
 	$("#uploadSpreadsheet").prop("disabled",true);
 	clearSelectButton("ListOfDataSetOptions");	
-	clearSelectButton("periodYear");
-	clearSelectButton("periodMonth");		
-	clearSelectButton("periodWeek");
-	clearSelectButton("periodDay");
+	//clearSelectButton("periodYear");
+	//clearSelectButton("periodMonth");		
+	//clearSelectButton("periodWeek");
+	//clearSelectButton("periodDay");
 }
 
 function queryDataSet() {
@@ -520,7 +522,7 @@ function queryDataSet() {
 	
 	//Make the get spreadsheet button invisible.
 	//This is necessary if the user had previously selected a program or data set. 
-	//clearDataSetSelectButtons();
+	clearDataSetSelectButtons();
 	
 	//Get the id of the selected data set.
 	dataSet_id=$("#dataSetList").val();
@@ -546,6 +548,10 @@ function queryDataSet() {
 		$.each(json.sections, function( key, val ) {
 			queryDataSetSections(val.id);
 		})
+	}).done(function(){
+		if(dataSetOptions==dataSetOptionMap.size){
+			tryToCreateDataSetOptionsDropDown();
+		}
 	})
   
 	$("#uploadSpreadsheet").prop("disabled",false);
@@ -567,15 +573,14 @@ function queryCategoryCombo(categoryComboId, forDataSet) {
 	//Retrieve the data elements of this data set.
 	$.getJSON(apiBaseUrl+"/categoryCombos/"+categoryComboId+".json?paging=false&fields=categoryOptionCombos", 
 	function (json) {
+		dataSetOptions=json.categoryOptionCombos.length;
 		//an array of category option combos
 		var categoryOptions = [];
 		$.each(json.categoryOptionCombos, function( key, val ) {
 			categoryOptions.push(val.id)
 			queryCategoryOptionCombo(val.id, forDataSet);
 		})
-		if(forDataSet){
-			tryToCreateDataSetOptionsDropDown();
-		}else{
+		if (!forDataSet){
 			categoryCombo_CategoryOptionCombo_Map.set(categoryComboId, categoryOptions);
 		}
 	})
@@ -593,6 +598,10 @@ function queryCategoryOptionCombo(categoryOptionComboId, dataSet) {
 				dataSetOptionMap.set(categoryOptionComboId, json.displayName);
 			}else{
 				CategoryOptionCombo_Map.set(categoryOptionComboId, json.displayName);
+			}
+	    }).done(function(){
+	    	if(dataSet){
+				tryToCreateDataSetOptionsDropDown();
 			}
 	    })
 }
@@ -1662,7 +1671,7 @@ function getPeriod(){
 }
 
 /**
- * Zero pdding of numbers
+ * Zero padding of numbers
  * Source: https://stackoverflow.com/questions/2998784/how-to-output-integers-with-leading-zeros-in-javascript
  * @param num
  * @param size
