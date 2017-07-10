@@ -1283,6 +1283,26 @@ function getPeriods(){
 	}
 }
 /**
+ * Returns the current time in milliseconds as a string in the format: "2017-07-04T12:35:37.554+0000".
+ * @returns
+ */
+function getCurrentTime(){
+	var date = new Date();
+	//Format: "2017-07-04T12:35:37.554+0000"
+	var year = date.getFullYear();
+	//Returns the month (from 0-11)
+	var month = 1 + date.getUTCMonth();
+	//Returns the day of the month, according to universal time (from 1-31)
+	var day = date.getUTCDate();
+	var hour = date.getUTCHours();
+	//Returns the minutes (from 0-59)
+	var minutes = date.getUTCMinutes();
+	var seconds = date.getUTCSeconds();
+	var milliSeconds = date.getUTCMilliseconds();
+	return year + "-" + month + "-" + day +"T" + hour + ":" + minutes + ":" + seconds + ":" + milliSeconds + "+0000";
+}
+
+/**
  * Generates a new template spreadsheet.
  * 
  * @param forDataSet Should this spreadsheet be generated for a dataset? If not it is for a program.
@@ -1402,8 +1422,7 @@ function getSpreadsheet(forDataSet) {
 					"dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value","storedBy","created","lastUpdated","followUp"])
 			];
 			
-			var date = new Date();
-			var now = date.toDateString();
+			var now = getCurrentTime();
 			
 			//Loop over all periods
 			for(let period of getPeriods()){
@@ -1417,7 +1436,7 @@ function getSpreadsheet(forDataSet) {
 					//Loop over all category-option-combos
 					for(let categoryOptionComboID of categoryOptionCombos){
 						
-						var new_row = new Array(13);
+						var new_row = new Array(12);
 						//label of data element
 						new_row[0]=dataElementsLabel.get(dataElementID);
 						//label of the category option combo
@@ -1433,13 +1452,13 @@ function getSpreadsheet(forDataSet) {
 						//value
 						new_row[7]=0.0;						
 						//stored by
-						new_row[9]=userName;		
+						new_row[8]=userName;		
 						//created
-						new_row[10]=now;
+						new_row[9]=now;
 						//last updated
-						new_row[11]=now;
+						new_row[10]=now;
 						//follow up
-						new_row[12]=false;
+						new_row[11]="false";
 						//append new line with data element ID, period, orgunit, category-option-combo ID, category-option-combo name, leave rest open
 						output_array_sheet_1.push(new_row);
 					}
