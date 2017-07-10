@@ -1405,7 +1405,6 @@ function getSpreadsheet(forDataSet) {
 			var date = new Date();
 			var now = date.toDateString();
 			
-			//TODO Append lines
 			//Loop over all periods
 			for(let period of getPeriods()){
 			
@@ -1418,7 +1417,7 @@ function getSpreadsheet(forDataSet) {
 					//Loop over all category-option-combos
 					for(let categoryOptionComboID of categoryOptionCombos){
 						
-						var new_row = new Array(11);
+						var new_row = new Array(13);
 						//label of data element
 						new_row[0]=dataElementsLabel.get(dataElementID);
 						//label of the category option combo
@@ -1430,7 +1429,7 @@ function getSpreadsheet(forDataSet) {
 						new_row[5]=categoryOptionComboID;
 						//TODO Retrieve from select button:
 						//ID of the attribute option combo:
-						new_row[6]=attributeOptionComboID;
+						new_row[6]=getSelectValue ("ListOfDataSetOptions");
 						//value
 						new_row[7]=0.0;						
 						//stored by
