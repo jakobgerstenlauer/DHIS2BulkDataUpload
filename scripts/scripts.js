@@ -691,14 +691,21 @@ function tryToCreateDataSetOptionsDropDown(){
  */
 function createDataSetOptionsDropDown() {	
 		if(document.getElementById('ListOfDataSetOptions')){
+				clearSelectButton('ListOfDataSetOptions');
 				var sel = document.getElementById('ListOfDataSetOptions');
+				var uniqueNames = new Set();
 				for (const [id,name] of dataSetOptionMap.entries()) {
-						var opt = document.createElement('option');		
-						//console.log(name);	
-						opt.innerHTML = name;
-						//console.log(id);	
-						opt.value = id;
-						sel.appendChild(opt);
+						if(uniqueNames.has(name)){
+							console.log("Option "+name+" is already included!");	
+						}else{
+							uniqueNames.add(name)
+							var opt = document.createElement('option');		
+							//console.log(name);	
+							opt.innerHTML = name;
+							//console.log(id);	
+							opt.value = id;
+							sel.appendChild(opt);
+						}
 				}				
 		}
 }
