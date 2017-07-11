@@ -626,7 +626,7 @@ function tryToCreateDataSetDropDown(){
 			return;
 		}
 	}else{
-		sleep (1000);
+		sleep (3000);
 		tryToCreateDataSetDropDown();
 	}
 }
@@ -1529,11 +1529,10 @@ function getSpreadsheet(forDataSet) {
 				output_array_sheet_2.push(new_row);			
 			}
 		}	
-		
-		var period = getPeriod();
 			
 		var output_array_sheet_3; 
 		if(forDataSet){
+			var period = getPeriod();
 			//Get the id of the selected data set.
 			var dataSet_id=$("#dataSetList").val();
 			//Get the name of the selected data set.
