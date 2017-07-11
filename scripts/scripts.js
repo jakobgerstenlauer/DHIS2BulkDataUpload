@@ -1776,6 +1776,11 @@ function importDataFromDataSet(valuesToImport){
 					//number of successfully imported values
 					var imports= res.importCount.imported 
 					
+					//print the error messages in the field "conflicts":
+					for(let errorMessage of res.conflicts){
+						add(JSON.stringify(errorMessage),4)
+					}
+					
 					if(imports === valuesToImport){
 						add("All "+ imports +" row imports were successful in the dry run!", 3)
 						add("Now the real import of data starts!", 3)
