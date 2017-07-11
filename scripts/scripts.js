@@ -235,7 +235,11 @@ function hideSelectButton (id) {
  * @returns
  */
 function clearSelectButton (id){
-	document.getElementById(id).options.length = 0;
+	var sel = document.getElementById(id);
+	var length = sel.options.length;
+	for (i = 0; i < length; i++) {
+	  sel.options[i] = null;
+	}
 }
 
 /**
@@ -581,6 +585,7 @@ function queryCategoryCombo(categoryComboId, forDataSet) {
 			queryCategoryOptionCombo(val.id, forDataSet);
 		})
 		if (!forDataSet){
+			categoryCombo_CategoryOptionCombo_Map.clear();
 			categoryCombo_CategoryOptionCombo_Map.set(categoryComboId, categoryOptions);
 		}
 	})
@@ -665,6 +670,10 @@ function createDataSetDropDown() {
  */
 function tryToCreateDataSetOptionsDropDown(){
 	var sel = document.getElementById('ListOfDataSetOptions');
+	var length = sel.options.length;
+	for (i = 0; i < length; i++) {
+	  sel.options[i] = null;
+	}
 	if(sel && (dataSetOptionMap.size > 0)){
 			createDataSetOptionsDropDown();
 	}else{
