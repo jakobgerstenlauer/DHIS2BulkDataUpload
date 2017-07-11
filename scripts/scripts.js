@@ -1433,7 +1433,7 @@ function getSpreadsheet(forDataSet) {
 				// {"dataElement":"r93CGkSemDg","period":"2016","orgUnit":"uZZhXR5xxmV","categoryOptionCombo":"rUqhQb4yK70","attributeOptionCombo":"WXQU0xM4tNh","value":"5","storedBy":"admin","created":"2017-07-04T12:35:37.554+0000","lastUpdated":"2017-07-04T12:35:37.554+0000","followUp":false}
 				// I prepend two additional columns with labels which have to be deleted before the upload:
 
-				[].concat.apply([],["DataElementLabel","OptionLabel",
+				[].concat.apply([],["OrgUnitName","DataElementLabel","OptionLabel",
 					"dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value","storedBy","created","lastUpdated","followUp"])
 			];
 			
@@ -1454,28 +1454,31 @@ function getSpreadsheet(forDataSet) {
 						//Loop over all category-option-combos
 						for(let categoryOptionComboID of categoryOptionCombos){
 							
-							var new_row = new Array(12);
+							var new_row = new Array(13);
+							//label of data or unit
+							new_row[0]=orgUnitNames.get(org_unit_id);
+							//TODO Update array indices (+1)!
 							//label of data element
-							new_row[0]=dataElementsLabel.get(dataElementID);
+							new_row[1]=dataElementsLabel.get(dataElementID);
 							//label of the category option combo
-							new_row[1]=CategoryOptionCombo_Map.get(categoryOptionComboID);
+							new_row[2]=CategoryOptionCombo_Map.get(categoryOptionComboID);
 							
-							new_row[2]=dataElementID;
-							new_row[3]=period;
-							new_row[4]=org_unit_id;
-							new_row[5]=categoryOptionComboID;
+							new_row[3]=dataElementID;
+							new_row[4]=period;
+							new_row[5]=org_unit_id;
+							new_row[6]=categoryOptionComboID;
 							//ID of the attribute option combo:
-							new_row[6]=getSelectValue ("ListOfDataSetOptions");
+							new_row[7]=getSelectValue ("ListOfDataSetOptions");
 							//value
-							new_row[7]=0.0;						
+							new_row[8]=0.0;						
 							//stored by
-							new_row[8]=userName;		
+							new_row[9]=userName;		
 							//created
-							new_row[9]=now;
-							//last updated
 							new_row[10]=now;
+							//last updated
+							new_row[11]=now;
 							//follow up
-							new_row[11]="false";
+							new_row[12]="false";
 							//append new line with data element ID, period, orgunit, category-option-combo ID, category-option-combo name, leave rest open
 							output_array_sheet_1.push(new_row);
 						}

@@ -117,6 +117,7 @@ function Selection()
     	
     	for(let org_unit_id of selected){
     		org_unit_ids.add(org_unit_id);
+    		orgUnitNames.set(org_unit_id,organisationUnits[org_unit_id].n);
     	}
     };
     
