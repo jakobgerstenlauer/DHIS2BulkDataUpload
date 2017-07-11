@@ -2214,7 +2214,7 @@ function handleFile(f) {
 					add("Error! The metadata is not consistent!", 4);
 				}else{	
 					if(processDataSet){
-						processDataSet().then(add("File was processed.",1));
+						processDataset().then(add("File was processed.",1));
 					}else{
 						processProgramData().then(add("File was processed.",1));
 					}
@@ -2564,7 +2564,7 @@ function processProgramData(){
  *
  * @returns
  */
-function processDataSet(){
+function processDataset(){
 	return new Promise(
 			function (resolve, reject) {
 				data = {};
