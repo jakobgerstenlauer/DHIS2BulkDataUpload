@@ -1459,7 +1459,6 @@ function getSpreadsheet(forDataSet) {
 							var new_row = new Array(13);
 							//label of data or unit
 							new_row[0]=orgUnitNames.get(org_unit_id);
-							//TODO Update array indices (+1)!
 							//label of data element
 							new_row[1]=dataElementsLabel.get(dataElementID);
 							//label of the category option combo
@@ -1771,16 +1770,9 @@ function importDataFromDataSet(valuesToImport){
 						'Content-Type': 'application/json'
 					},	
 					async: false
-				}).done(function(res) {				
-					
+				}).done(function(res) {		
 					add(res.importOptions.description,3)
-					
-					for(let count of res.importCount){
-						add(count, 3)
-					}
-					
 					console.log(JSON.stringify(res))
-					
 					//number of successfully imported values
 					var imports= res.importCount.imported 
 					
