@@ -109,14 +109,15 @@ function Selection()
     var listenerFunction = function(selected){
     	//console.log(selected[0]);    	
     	regionalUnitSelected = true;
-    	org_unit_id=selected[0];   
+    	org_unit_id=selected[0]; 
+    	org_unit_ids.add(org_unit_id);
     	org_unit_name=organisationUnits[org_unit_id].n;    	
     	org_unit_path=organisationUnits[org_unit_id].path;
     	$("#rightBar").hide();
     	getPolygon(org_unit_id,1);
     };
     
-    var multipleSelectionAllowed = false;
+    var multipleSelectionAllowed = true;
     var unselectAllowed = true;
     var rootUnselectAllowed = true;
     var autoSelectRoot = false;

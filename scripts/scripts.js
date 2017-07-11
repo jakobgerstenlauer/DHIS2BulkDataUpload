@@ -1426,7 +1426,6 @@ function getSpreadsheet(forDataSet) {
 		//First row with header containing informative labels for all data elements	  
 		var output_array_sheet_1 = [];
 		
-		
 		if(forDataSet){
 			output_array_sheet_1 = [
 				// Compare the example of a CSV file which can be imported into DHIS2:
@@ -1462,7 +1461,6 @@ function getSpreadsheet(forDataSet) {
 						new_row[3]=period;
 						new_row[4]=org_unit_id;
 						new_row[5]=categoryOptionComboID;
-						//TODO Retrieve from select button:
 						//ID of the attribute option combo:
 						new_row[6]=getSelectValue ("ListOfDataSetOptions");
 						//value
