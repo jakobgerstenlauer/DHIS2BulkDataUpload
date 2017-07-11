@@ -1439,42 +1439,46 @@ function getSpreadsheet(forDataSet) {
 			
 			var now = getCurrentTime();
 			
-			//Loop over all periods
-			for(let period of getPeriods()){
-			
-				//Loop over all data elements
-				for (let dataElementID of dataElementIDs.keys()){
-					
-					var categoryComboID = dataElementIDsCategoryComboIDMap.get(dataElementID);
-					var categoryOptionCombos = categoryCombo_CategoryOptionCombo_Map.get(categoryComboID);
+			//Loop over all selected org-units
+			for(let org_unit_id of org_unit_ids){
+				
+				//Loop over all periods
+				for(let period of getPeriods()){
+				
+					//Loop over all data elements
+					for (let dataElementID of dataElementIDs.keys()){
 						
-					//Loop over all category-option-combos
-					for(let categoryOptionComboID of categoryOptionCombos){
-						
-						var new_row = new Array(12);
-						//label of data element
-						new_row[0]=dataElementsLabel.get(dataElementID);
-						//label of the category option combo
-						new_row[1]=CategoryOptionCombo_Map.get(categoryOptionComboID);
-						
-						new_row[2]=dataElementID;
-						new_row[3]=period;
-						new_row[4]=org_unit_id;
-						new_row[5]=categoryOptionComboID;
-						//ID of the attribute option combo:
-						new_row[6]=getSelectValue ("ListOfDataSetOptions");
-						//value
-						new_row[7]=0.0;						
-						//stored by
-						new_row[8]=userName;		
-						//created
-						new_row[9]=now;
-						//last updated
-						new_row[10]=now;
-						//follow up
-						new_row[11]="false";
-						//append new line with data element ID, period, orgunit, category-option-combo ID, category-option-combo name, leave rest open
-						output_array_sheet_1.push(new_row);
+						var categoryComboID = dataElementIDsCategoryComboIDMap.get(dataElementID);
+						var categoryOptionCombos = categoryCombo_CategoryOptionCombo_Map.get(categoryComboID);
+							
+						//Loop over all category-option-combos
+						for(let categoryOptionComboID of categoryOptionCombos){
+							
+							var new_row = new Array(12);
+							//label of data element
+							new_row[0]=dataElementsLabel.get(dataElementID);
+							//label of the category option combo
+							new_row[1]=CategoryOptionCombo_Map.get(categoryOptionComboID);
+							
+							new_row[2]=dataElementID;
+							new_row[3]=period;
+							new_row[4]=org_unit_id;
+							new_row[5]=categoryOptionComboID;
+							//ID of the attribute option combo:
+							new_row[6]=getSelectValue ("ListOfDataSetOptions");
+							//value
+							new_row[7]=0.0;						
+							//stored by
+							new_row[8]=userName;		
+							//created
+							new_row[9]=now;
+							//last updated
+							new_row[10]=now;
+							//follow up
+							new_row[11]="false";
+							//append new line with data element ID, period, orgunit, category-option-combo ID, category-option-combo name, leave rest open
+							output_array_sheet_1.push(new_row);
+						}
 					}
 				}
 			}
