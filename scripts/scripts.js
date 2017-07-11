@@ -1656,7 +1656,12 @@ function getSpreadsheet(forDataSet) {
 		var wb_out = XLSX.write(workbook, {bookType:'xlsx', bookSST:true, type: 'binary'});	
 		saveAs(new Blob([s2ab(wb_out)],{type:"application/octet-stream"}), fileName)	
 	}else{
-		add("Error: Can not create spreadsheet. Either the org. unit or the program was not selected!",3);
+		if(forDataSet){
+			add("Error: Can not create spreadsheet. Either the org. unit or the dataset was not selected!",3);
+		}else{
+			add("Error: Can not create spreadsheet. Either the org. unit or the program was not selected!",3);
+		}
+		
 	}
 }
 
