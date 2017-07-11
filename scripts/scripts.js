@@ -31,6 +31,8 @@ var sheetEndRows = []; // collected in xlsx.js
 var orgUnitIdScheme = "UID";
 var dataElementIdScheme = "UID";
 var idScheme = "UID";
+//data for data set upload
+var data;
 var dataValues = [];
 var eventDataValues = [];
 var errorString = "";
@@ -1386,8 +1388,8 @@ function getSpreadsheet(forDataSet) {
 				[""],
 				["First, select the data set and the type of period (yearly, monthly, weekly,daily)."],
 				["Then you are prompted to enter the details of the appropriate time period."],
-				["You also have to enter your organizational unit in the org. unit tree."],
-				["Next, download the spreadsheet template and fill in your data in the first sheet."],
+				["You also have to enter your organizational unit in the org. unit tree. Note that you can select several org units at the same time!"],
+				["Next, download the spreadsheet template and fill in your data in the second sheet."],
 				["Have a look at the third sheet (\"Legend\") which explains template structure and expected values."],
 				["Be sure to supply only values in the correct format and with appropriate value types."],
 				["Then, select the updated spreadsheet and upload it to the DHIS system."],
@@ -1408,7 +1410,7 @@ function getSpreadsheet(forDataSet) {
 			[""],
 			["First, select the program and your organizational unit."],
 			["If the program applies to NGOs you additionally have to select your NGO."],
-			["Next, download the spreadsheet template and fill in your data in the first sheet."],
+			["Next, download the spreadsheet template and fill in your data in the second sheet."],
 			["Have a look at the third sheet (\"Legend\") which explains template structure and expected values."],
 			["Be sure to supply only values in the correct format and with appropriate value types."],
 			["Then, select the updated spreadsheet and upload it to the DHIS system."],
@@ -1762,7 +1764,7 @@ function importDataFromDataSet(){
 					type: 'post',
 					url: apiBaseUrl + "/dataValueSets?dryRun=true",
 					contentType: "application/json; charset=utf-8",
-					data: JSON.stringify(eventDataValues),
+					data: JSON.stringify(data),
 					dataType: 'json',
 					headers:{
 						'Accept': 'application/json',
@@ -1789,7 +1791,7 @@ function importDataFromDataSet(){
 						type: 'post',
 						url: apiBaseUrl + "/dataValueSets?dryRun=false",
 						contentType: "application/json; charset=utf-8",
-						data: JSON.stringify(eventDataValues),
+						data: JSON.stringify(data),
 						dataType: 'json',
 						headers:{
 							'Accept': 'application/json',
@@ -1871,7 +1873,7 @@ function importDataFromDataSet(){
 					try
 					{			
 						add("The following request could not be processed:"+JSON.stringify(eventDataValues), 4)
-						add("Event data import response:", 3);
+						add("Data set import response:", 3);
 						if(isNullOrUndefined(request)){
 							if(isNullOrUndefined(errorThrown)){
 								onbeforeunload();
@@ -2145,14 +2147,18 @@ function isMetaDataValid(){
 		}
 	}
 	
-	//get the id of the selected org unit: org_unit_id
-	orgUnit_id_metadata = metaDataArray[0].OrgUnitId;
-	console.log("org unit id excel: " + orgUnit_id_metadata);
-	console.log("org unit id form: " + org_unit_id);
+	//CHECK THE ORG UNIT ID ONLY IF PROGRAM DATA IS UPLOADED
+	if(!processDataSet){
 	
-	if(!(orgUnit_id_metadata === org_unit_id)){
-		add("Error! The selected org unit id: "+org_unit_id+" does not match the id in the spreadsheet: " +orgUnit_id_metadata+" !", 4);
-		return false;
+		//get the id of the selected org unit: org_unit_id
+		orgUnit_id_metadata = metaDataArray[0].OrgUnitId;
+		console.log("org unit id excel: " + orgUnit_id_metadata);
+		console.log("org unit id form: " + org_unit_id);
+		
+		if(!(orgUnit_id_metadata === org_unit_id)){
+			add("Error! The selected org unit id: "+org_unit_id+" does not match the id in the spreadsheet: " +orgUnit_id_metadata+" !", 4);
+			return false;
+		}
 	}
 	
 	if(processDataSet){
@@ -2552,269 +2558,40 @@ function processProgramData(){
 
 /**
  *Process and upload data for data sets to DHIS2 Api
- *TODO adapt code to data sets!
+ *{"dataValues":[
+ *{"dataElement":"r93CGkSemDg","period":"2016","orgUnit":"uZZhXR5xxmV","categoryOptionCombo":"rUqhQb4yK70","attributeOptionCombo":"WXQU0xM4tNh","value":"5","storedBy":"admin","created":"2017-07-04T12:35:37.554+0000","lastUpdated":"2017-07-04T12:35:37.554+0000","followUp":false}
+ *]}
  *
  * @returns
  */
 function processDataSet(){
 	return new Promise(
 			function (resolve, reject) {
-
-				//Should the geolocation be checked?
-				var CheckGeoLocation = document.getElementById("CheckGeoLocation").value == 1;
-				var hasErrors = false;
-				var rejected = false;		
-	
-				dataValues = [];
-				eventDataValues = {};
-				errorString = "";
-				isAggDataAvailable = false;	
-				eventDataValues.events = [];
+				data = {};
+				data.dataValues = [];
 				var lineNr=0;
 
 				//Iterate over all the rows, which are the inner arrays of the json array of arrays.
+				// {"dataElement":"r93CGkSemDg","period":"2016","orgUnit":"uZZhXR5xxmV","categoryOptionCombo":"rUqhQb4yK70","attributeOptionCombo":"WXQU0xM4tNh","value":"5","storedBy":"admin","created":"2017-07-04T12:35:37.554+0000","lastUpdated":"2017-07-04T12:35:37.554+0000","followUp":false}
+				
 				resultArray.forEach( function (arrayItem){		
-					
 					lineNr++;
-					var eventDataValue = {};
-					eventDataValue.dataSet = dataSet_id_metadata;
-					eventDataValue.completeData = getCompleteData();
-					eventDataValue.period = getPeriod();
-					eventDataValue.orgUnit = org_unit_id;	
-					var point = new Array();
-										
-					if(CheckGeoLocation){						
-						//check the first three columns (obligatory values):
-						for (const [column, label] of obligatoryDataElementsRowLabelMapDataSets.entries()) {
-
-							if(!arrayItem.hasOwnProperty(label)){
-								//if not, then we have to reject this line / this event 
-								add("The value of "+label+" in column "+column+
-										" is undefined for input line "+ lineNr +" "
-										+JSON.stringify(arrayItem), 4);
-								add("Please read the log messages attentively and fix the problem! ", 4);
-								add("You may have to set the log level to \"trace\" or \"debug\".", 4);
-								rejected=true;		
-								hasErrors=true;	
-							}						
-							switch(label){
-							case "Latitude":  
-								if(isNaN(arrayItem.Latitude) || (Math.abs(parseInt(arrayItem.Latitude))>90.0)) {
-									rejected=true;		
-									hasErrors=true;
-									add("Row: "+lineNr+"->The entered value "+arrayItem.Latitude+" for latitude is not a valid number!",4);
-									break;
-								}else{
-									point[0]=arrayItem.Latitude;
-								}
-							case "Longitude": 
-								if(isNaN(arrayItem.Longitude) || (Math.abs(parseInt(arrayItem.Longitude))>180.0)) {
-									rejected=true;		
-									hasErrors=true;
-									add("Row: "+lineNr+"->The entered value "+arrayItem.Longitude+" for longitude is not a valid number!",4);
-									break;
-								}else{
-									point[1]=arrayItem.Longitude;
-								}						
-							}	
-						}		
-						
-						add("Location: "+point,1)
-						//If no polygon has been supplied for org-unit, its parent organisation
-						//and the grandparent organisation, I have to skip this test.
-						//Instead a warning is printed, because it would be better to do this test.
-						if(isNullOrUndefined(org_unit_polygon)){
-							add("Row: "+lineNr+"->Warning: No polygon information has been supplied!",3)
-							add("Warning: The supplied location can not be validated!",3)
-						}else{ 
-							//Check if the location is within any of the polygons
-							//of the org. unit:
-							if(!insideAnyPolygon(point, org_unit_polygon)){
-								add("Row: "+lineNr+"->Invalid location! The location "+point+" is not located within the polygon of the org unit "+org_unit_name+" !", 4)
-								add("The polygon of this org-unit is:"+org_unit_polygon, 2)
-								add("Row: "+lineNr+"->Fatal error! The data import is canceled!", 4);
-								rejected=true;
-								return hasErrors;
-							}
-						}			
-						if(rejected){
-							add("Row: "+lineNr+"->Fatal error! The data import is canceled!", 4);
-							add("Please read the log messages attentively and fix the problem! ", 3);
-							add("You may have to set the log level to \"trace\" or \"debug\".", 3);
-						}			
-					}
-					
-					//This is the event timestamp.
-					eventDataValue.coordinate = {};
-					eventDataValue.coordinate.latitude = arrayItem.Latitude;
-					eventDataValue.coordinate.longitude = arrayItem.Longitude;						
-					eventDataValue.dataValues = [];						
-					
-					//Count missing data elements per row.
-					var missingDataElement=0;						
-					
-					//here all option values have to be available
-					while(optionsToQuery>0){
-						sleep(1000);		
-					}						
-					if(optionsToQuery>0){
-						add("Row: "+lineNr+"->Error: Some values of optionals are not yet available!",4);
-						rejected=true;		
-						hasErrors=true;
-					}
-
-					for(let dataElement of dataElementIDs)
-					{
-						var dv = {};
-						var label = dataElementsLabel.get(dataElement);
-						var valueType = dataElementsValueType.get(dataElement);
-						var optionSetId = dataElementsOptionSet.get(dataElement);
-						if(dataElementsHasOptionSet.get(dataElement) && isNullOrUndefinedOrEmptyString(optionSetId)){							
-							add("Row: "+lineNr+"->Error! The option set is not defined: ", optionSetId, 4);
-						}								
-						dv.dataElement = dataElement;							
-						//Test if the json object representing the row has the property label:
-						if(arrayItem.hasOwnProperty(label)){								
-							var rawData = arrayItem[label];															
-							//Depending on the type of value, 
-							//do some cleaning of the data:
-							switch (valueType) {								 
-							case "COORDINATE":
-							case "LONG_TEXT":
-							case "TEXT":
-								add("before cleaning: "+rawData, 1);
-								//Remove all inner quotes and escapes from strings
-								if(typeof rawData === "string"){
-									rawData = rawData.replace(/['"]+/g,'');
-								}else{
-									rawData = rawData.replace(/['"]+/g,'');
-								}
-								add("Row: "+lineNr+"->after cleaning: "+rawData, 1);
-								break;
-							case "INTEGER_POSITIVE":
-								add("Row: "+lineNr+"->Before cleaning: "+rawData, 1);									 
-								//Remove negative or zero values for data type INTEGER_POSITIVE
-								if(rawData<=0)rawData=void 0;
-								add("Row: "+lineNr+"->After cleaning: "+rawData, 1);
-								break;
-							case "TRUE_ONLY":
-								add("Row: "+lineNr+"->Before cleaning: "+rawData, 1);
-								if(typeof rawData === "string"){
-									rawData = rawData.replace(/['"]+/g,'');
-								}else{
-									rawData = rawData.replace(/['"]+/g,'');
-								}
-								//Using regular expressions, replace all char sequences with letters 
-								// T/t R/r U/u E/e with "true"
-								rawData.replace(/true/gi, "true");
-								if(!(isTrue.test(rawData))){
-									rawData=void 0;
-								}
-								add("Row: "+lineNr+"->After cleaning: "+rawData, 1);
-								break;
-							default:
-								add("Row: "+lineNr+"->No cleaning operation defined for data type: "+valueType, 1);
-							}								
-							//check if value is within set of valid options for option sets:
-							if(dataElementsHasOptionSet.get(dataElement))
-							{
-								add("Row: "+lineNr+"->Data element with ID:\""+dataElement+"\" label \"" + label + "\" and value type \"" + valueType +
-										"\" has option set with ID: \""+ optionSetId +"\"", 1);
-								if(optionMap.has(optionSetId)){
-									add("Row: "+lineNr+"->Option map has "+optionMap.size +" valid values.", 1);
-									var optionSet = optionMap.get(optionSetId);
-									add("Row: "+lineNr+"->Option set has "+optionSet.length+" valid values:", 1);
-									for (var i = 0; i < optionSet.length; i++) {
-										if(options.has(optionSet[i])){
-											add("Row: "+lineNr+"> Option "+i+" Id: "+optionSet[i]+" Value: "+ options.get(optionSet[i]), 1);
-										}else{
-											add("Row: "+lineNr+"->Option "+i+" Id: "+optionSet[i], 4);
-										}
-									}										
-									var valueInOptionSet = false;									
-									for (var i = 0; i < optionSet.length; i++) {											
-										if(options.has(optionSet[i])){
-											var option = options.get(optionSet[i]);
-										}else{
-											add("Row: "+lineNr+"->Option with ID: "+optionSet[i]+" is not available",4);
-											add("Row: "+lineNr+"->Available options are: ",4);
-											for (const [k,v] of options.entries()) {
-												add("key: "+k+"\tvalue: "+v, 4);
-											}	
-											rejected=true;		
-											hasErrors=true;
-											//return true;	
-										}											
-										switch (valueType) {								 
-										case "LONG_TEXT":
-										case "TEXT":
-											rawData = String(rawData);
-											//If the text string matches the option (upper/lower case is ignored)
-											if(rawData.toUpperCase() === option.toUpperCase()){
-												add("Row: "+lineNr+"->Value: "+rawData+" matches option "+option+"!",1);
-												rawData = option;
-												valueInOptionSet = true;
-												break;
-											}else{
-												add("Row: "+lineNr+"->Value: " + rawData + " does NOT match option "+option+"!",1);	
-												break;
-											}
-										default:  
-											//If the text string matches the option (upper/lower case is ignored)
-											if(rawData === option){
-												add("Row: "+lineNr+"->Value: "+rawData+" of data type "+ valueType +" matches option "+option+"!",1);
-												rawData = option;
-												valueInOptionSet = true;
-												break;
-											}else{
-												add("value: " + rawData +" of data type "+ valueType + " does NOT match option "+option+"!",1);
-												break;
-											}
-										}										   
-									}
-									if(valueInOptionSet == false){
-										add("Row: "+lineNr+"->Invalid value \""+rawData+"\" for option set: "+optionSetId, 4);
-										rejected=true;		
-										hasErrors=true;
-									}
-								}else{
-									add("Row: "+lineNr+"->Error! No options defined for option set with ID: "+optionSetId, 4);
-								}
-							}
-							dv.value = rawData;
-							if(!rejected){
-								eventDataValue.dataValues.push(dv);
-							}
-						}else{	
-							missingDataElement++;
-							//Abort if an obligatory data element is missing
-							//or if all data elements are missing.
-							if((dataElementsCompulsory.get(dataElement)==true)||(missingDataElement==dataElementsLabel.size)){
-								if(dataElementsCompulsory.get(dataElement)==true){
-									add("Row: "+lineNr+"->The value of the compulsory "+label+" in column "+column+
-											" is undefined for input line "+ lineNr +" "
-											+JSON.stringify(arrayItem), 4);
-								}else{
-									add("Row: "+lineNr+"->No single data element is supplied in input line "+ lineNr +" "
-											+JSON.stringify(arrayItem), 4);
-								}
-								rejected=true;		
-								hasErrors=true;	
-							}								
-						}
-					}
-					if(!rejected){
-						eventDataValues.events.push(eventDataValue);
-					}
+					var rowValues = {};
+					rowValues.dataElement = arrayItem.dataElement;
+					rowValues.period = arrayItem.period;
+					rowValues.orgUnit = arrayItem.orgUnit;
+					rowValues.categoryOptionCombo = arrayItem.categoryOptionCombo;
+					rowValues.attributeOptionCombo = arrayItem.attributeOptionCombo;
+					rowValues.value = arrayItem.value;
+					rowValues.storedBy = arrayItem.storedBy;
+					rowValues.created = arrayItem.created;
+					rowValues.lastUpdated = arrayItem.lastUpdated;
+					rowValues.followUp = arrayItem.followUp;
+					data.dataValues.push(rowValues);
 				});			
 								
-				add("Processed events: "+resultArray.length, 3);
-
-				if(!rejected){					
-					importDataFromDataSet().then(resolve());					
-				}else{
-					reject("The data upload was rejected as a whole. No data was uploaded");
-				}
+				add("Processed rows: "+resultArray.length, 3);
+				importDataFromDataSet().then(resolve());
 			}
 	)	
 }
