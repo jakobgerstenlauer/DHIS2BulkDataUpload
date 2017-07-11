@@ -1317,7 +1317,7 @@ function getCurrentTime(){
 	var minutes = monthToString(date.getUTCMinutes());
 	var seconds = monthToString(date.getUTCSeconds());
 	var milliSeconds = date.getUTCMilliseconds();
-	return year + "-" + month + "-" + day +"T" + hour + ":" + minutes + ":" + seconds + ":" + milliSeconds + "+0000";
+	return year + "-" + month + "-" + day +"T" + hour + ":" + minutes + ":" + seconds + "." + milliSeconds + "+0000";
 }
 
 /**
@@ -1754,7 +1754,7 @@ function getCompleteData(){
 	}
 }
 
-function importDataFromDataSet(){
+function importDataFromDataSet(valuesToImport){
 
 	return new Promise(
 			function (resolve, reject) {
@@ -1762,7 +1762,7 @@ function importDataFromDataSet(){
 				$.ajax({
 					method: "POST",
 					type: 'post',
-					url: apiBaseUrl + "/dataValueSets?dryRun=true",
+					url: apiBaseUrl + "/dataValueSets?dryRun=true&importStrategy=CREATE",
 					contentType: "application/json; charset=utf-8",
 					data: JSON.stringify(data),
 					dataType: 'json',
@@ -1771,25 +1771,27 @@ function importDataFromDataSet(){
 						'Content-Type': 'application/json'
 					},	
 					async: false
-				}).done(function(res) {						
-					add(res.message,3);
-					add(res.httpStatus,3);
-
-					var importSummaryArray = res.response.importSummaries;
-					var successfulImports = 0;
-					for (var i = 0; i < importSummaryArray.length; i++){
-						if(importSummaryArray[i].status === "SUCCESS"){
-							successfulImports++;
-						}
-					}		
-					if(successfulImports==importSummaryArray.length){
-						add("All "+ importSummaryArray.length +" row imports were successful in the dry run!", 3)
+				}).done(function(res) {				
+					
+					add(res.importOptions.description,3)
+					
+					for(let count of res.importCount){
+						add(count, 3)
+					}
+					
+					console.log(JSON.stringify(res))
+					
+					//number of successfully imported values
+					var imports= res.importCount.imported 
+					
+					if(imports === valuesToImport){
+						add("All "+ imports +" row imports were successful in the dry run!", 3)
 						add("Now the real import of data starts!", 3)
 						
 						$.ajax({
 						method: "POST",
 						type: 'post',
-						url: apiBaseUrl + "/dataValueSets?dryRun=false",
+						url: apiBaseUrl + "/dataValueSets?dryRun=false&importStrategy=CREATE",
 						contentType: "application/json; charset=utf-8",
 						data: JSON.stringify(data),
 						dataType: 'json',
@@ -1798,63 +1800,14 @@ function importDataFromDataSet(){
 							'Content-Type': 'application/json'
 						},
 						async: false
-					}).done(function(res) {						
-						add(res.message,3);
-						add(res.httpStatus,3);
-
-						add("Total number of data elements imported: " + res.response.imported, 3);
-
-						var ignoredValues = res.response.ignored;
-						if(ignoredValues>0){
-							add("Total number of data elements ignored: " + ignoredValues, 3);
-							add("There are several errors that have to be fixed! " + ignoredValues, 3);	
-							onbeforeunload();
-							reject("There are "+ ignoredValues +" errors that have to be fixed! ");
-						}
-
-						//write import summary for each row up to max_length
-						var max_length = 100;
-						if(res.response.importSummaries.length < max_length){
-							for(var i = 0; i < res.response.importSummaries.length;i++){
-								add("row: "+i+" data elements imported: "+res.response.importSummaries[i].importCount.imported, 3);
-							}
-						}else{
-							add("Only the import results for the first "+max_length+" of "+res.response.importSummaries.length+" are shown:", 3);
-							for(var i = 0; i < max_length;i++){
-								add("row: "+i+" values imported: "+res.response.importSummaries[i].importCount.imported, 3);
-							}				
-						}	
-
+					}).done(function(res) {
 						onbeforeunload();
 						resolve("Successful data upload!");
 					})
 					.fail(function (request, textStatus, errorThrown) {
 						try
 						{			
-							add("The following request could not be processed:"+JSON.stringify(eventDataValues), 4)
-							add("Event data import response:", 3);
-							if(isNullOrUndefined(request)){
-								if(isNullOrUndefined(errorThrown)){
-									onbeforeunload();
-									reject();
-								}else{
-									onbeforeunload();
-									reject(errorThrown);
-								}
-							}else{
-								console.log(request);
-								if(isNullOrUndefined(textStatus)){
-									console.log(textStatus);
-								}
-								if(isNullOrUndefined(errorThrown)){
-									onbeforeunload();
-									reject();
-								}else{
-									console.log(errorThrown);
-									onbeforeunload();
-									reject(errorThrown);
-								}
-							}
+							add("The following request could not be processed:"+JSON.stringify(data), 4)
 						}
 						catch(ex)
 						{
@@ -1865,37 +1818,14 @@ function importDataFromDataSet(){
 						}			
 					})
 					}else{
-						reject("Error: Only "+ successfulImports + " out of " + importSummaryArray.length +" imports were successful!")
+						reject("Error: Only "+ imports + " out of " + valuesToImport +" imports were successful!")
 					}
 
 				})
 				.fail(function (request, textStatus, errorThrown) {
 					try
 					{			
-						add("The following request could not be processed:"+JSON.stringify(eventDataValues), 4)
-						add("Data set import response:", 3);
-						if(isNullOrUndefined(request)){
-							if(isNullOrUndefined(errorThrown)){
-								onbeforeunload();
-								reject();
-							}else{
-								onbeforeunload();
-								reject(errorThrown);
-							}
-						}else{
-							console.log(request);
-							if(isNullOrUndefined(textStatus)){
-								console.log(textStatus);
-							}
-							if(isNullOrUndefined(errorThrown)){
-								onbeforeunload();
-								reject();
-							}else{
-								console.log(errorThrown);
-								onbeforeunload();
-								reject(errorThrown);
-							}
-						}
+						add("The following request could not be processed:"+JSON.stringify(data), 4)
 					}
 					catch(ex)
 					{
@@ -2589,9 +2519,9 @@ function processDataset(){
 					rowValues.followUp = arrayItem.followUp;
 					data.dataValues.push(rowValues);
 				});			
-								
+				console.log(JSON.stringify(data))
 				add("Processed rows: "+resultArray.length, 3);
-				importDataFromDataSet().then(resolve());
+				importDataFromDataSet(resultArray.length).then(resolve());
 			}
 	)	
 }
