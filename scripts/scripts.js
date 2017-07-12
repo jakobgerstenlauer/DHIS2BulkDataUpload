@@ -1392,6 +1392,7 @@ function getSpreadsheet(forDataSet) {
 				["Next, download the spreadsheet template and fill in your data in the second sheet."],
 				["Have a look at the third sheet (\"Legend\") which explains template structure and expected values."],
 				["Be sure to supply only values in the correct format and with appropriate value types."],
+				["Note that you can choose between different upload strategies: You can create new values, update existing values, create or update, and delete values."],
 				["Then, select the updated spreadsheet and upload it to the DHIS system."],
 				["You do not have to upload the spreadsheet with the data in the same session."],
 				["However, if you upload it later on, be sure to choose the correct program and org unit."],
@@ -1455,7 +1456,9 @@ function getSpreadsheet(forDataSet) {
 						var categoryOptionCombos;
 						if(!categoryCombo_CategoryOptionCombo_Map.has(categoryComboID)){
 							add("There are no category option combos defined for the category combo "+categoryComboID+" !", 4)
-							categoryOptionCombos = categoryComboID;
+							var dummyArray = [];
+							dummyArray [0]= categoryComboID;
+							categoryOptionCombos = dummyArray;
 						}else{
 							categoryOptionCombos = categoryCombo_CategoryOptionCombo_Map.get(categoryComboID);
 						}
