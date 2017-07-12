@@ -1753,15 +1753,29 @@ function getCompleteData(){
 	}
 }
 
-function importDataFromDataSet(valuesToImport){
+/**
+ * Returns string for import strategy choosen in select button.
+ * @returns
+ */
+function getImportStrategy(){
+	switch(getSelectValue("ChooseImportStrategy")){
+	case 1: return "CREATE"
+	case 2: return "UPDATE"
+	case 3: return "CREATE_AND_UPDATE"
+	case 4: return "DELETE"
+	default: add("Unknown value for import strategy!",4)
+	}
+}
 
+function importDataFromDataSet(valuesToImport){
 	return new Promise(
 			function (resolve, reject) {
-
+				var importStrategy = getImportStrategy();
 				$.ajax({
 					method: "POST",
 					type: 'post',
-					url: apiBaseUrl + "/dataValueSets?dryRun=true&importStrategy=CREATE",
+					//Possible strategies are: CREATE | UPDATE | CREATE_AND_UPDATE | DELETE
+					url: apiBaseUrl + "/dataValueSets?dryRun=true&importStrategy="+importStrategy,
 					contentType: "application/json; charset=utf-8",
 					data: JSON.stringify(data),
 					dataType: 'json',
@@ -1774,26 +1788,26 @@ function importDataFromDataSet(valuesToImport){
 					add(res.importOptions.description,3)
 					console.log(JSON.stringify(res))
 					//number of successfully imported values
-					var imports= res.importCount.imported 
+					var ignored = res.importCount.ignored 
+					var imported = res.importCount.imported
 					
 					if(isNullOrUndefined(res.conflicts)){
-						add("No conflicts found",3)
+						add("No problems found during test upload.",3)
 					}else{
 						//print the error messages in the field "conflicts":
 						for(let errorMessage of res.conflicts){
-							add("Error for data value "+ errorMessage.object +" : "+ errorMessage.value, 4)
+							add("Error for data value \""+ errorMessage.object +"\" : "+ errorMessage.value, 4)
 						}
 					}
 					
-					
-					if(imports === valuesToImport){
-						add("All "+ imports +" row imports were successful in the dry run!", 3)
+					if(imported === valuesToImport){
+						add("All "+ valuesToImport +" data elements were successfully imported in the dry run!", 3)
 						add("Now the real import of data starts!", 3)
 						
 						$.ajax({
 						method: "POST",
 						type: 'post',
-						url: apiBaseUrl + "/dataValueSets?dryRun=false&importStrategy=CREATE",
+						url: apiBaseUrl + "/dataValueSets?dryRun=false&importStrategy="+importStrategy,
 						contentType: "application/json; charset=utf-8",
 						data: JSON.stringify(data),
 						dataType: 'json',
@@ -1820,9 +1834,8 @@ function importDataFromDataSet(valuesToImport){
 						}			
 					})
 					}else{
-						reject("Error: Only "+ imports + " out of " + valuesToImport +" imports were successful!")
+						reject("Error: Only "+ ignored + " out of " + valuesToImport +" imports were successful!")
 					}
-
 				})
 				.fail(function (request, textStatus, errorThrown) {
 					try
@@ -1838,7 +1851,6 @@ function importDataFromDataSet(valuesToImport){
 						reject("Something went wrong while fetching event import error summary");
 					}			
 				})
-
 			})
 }
 
@@ -2522,7 +2534,7 @@ function processDataset(){
 					data.dataValues.push(rowValues);
 				});			
 				console.log(JSON.stringify(data))
-				add("Processed rows: "+resultArray.length, 3);
+				add("Processed data elements: "+resultArray.length, 3);
 				importDataFromDataSet(resultArray.length).then(resolve());
 			}
 	)	
