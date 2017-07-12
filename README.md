@@ -1,6 +1,13 @@
 ### Summary
 With this app users can upload a list of individual events using a MS Excel spreadsheet file.
 	
+### Credits:
+This App started as a fork from the DHIS2 "Excel Data Importer" App version 2.2 developed by the Hisp Vietnam group. 
+This App allows upload of event data to DHIS2 given a json template describing the data structure. The current App extends this functionality 
+by offering dynamic template creation for programs and data sets. I am very thankful to Eric Mourin Marin who introduced me to DHIS2 and often helped me in
+the practical implementation of the app. Marc Garnica Caparros shared his experience using the Excel Data Upload App and some
+customized Javascript code with me.
+
 ### How to use the bulk data upload app
 First, select the program and your organizational unit. 
 If the program applies to NGOs you additionally have to select your NGO.
