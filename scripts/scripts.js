@@ -1451,7 +1451,14 @@ function getSpreadsheet(forDataSet) {
 					for (let dataElementID of dataElementIDs.keys()){
 						
 						var categoryComboID = dataElementIDsCategoryComboIDMap.get(dataElementID);
-						var categoryOptionCombos = categoryCombo_CategoryOptionCombo_Map.get(categoryComboID);
+						
+						var categoryOptionCombos;
+						if(!categoryCombo_CategoryOptionCombo_Map.has(categoryComboID)){
+							add("There are no category option combos defined for the category combo "+categoryComboID+" !", 4)
+							categoryOptionCombos = categoryComboID;
+						}else{
+							categoryOptionCombos = categoryCombo_CategoryOptionCombo_Map.get(categoryComboID);
+						}
 							
 						//Loop over all category-option-combos
 						for(let categoryOptionComboID of categoryOptionCombos){
