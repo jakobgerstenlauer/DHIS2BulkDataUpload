@@ -2366,113 +2366,8 @@ function processProgramData(){
 						dv.dataElement = dataElement;							
 						//Test if the json object representing the row has the property label:
 						if(arrayItem.hasOwnProperty(label)){								
-							var rawData = arrayItem[label];															
-							//Depending on the type of value, 
-							//do some cleaning of the data:
-							switch (valueType) {								 
-							case "COORDINATE":
-							case "LONG_TEXT":
-							case "TEXT":
-								add("before cleaning: "+rawData, 1);
-								//Remove all inner quotes and escapes from strings
-								if(typeof rawData === "string"){
-									rawData = rawData.replace(/['"]+/g,'');
-								}else{
-									rawData = rawData.replace(/['"]+/g,'');
-								}
-								add("Row: "+lineNr+"->after cleaning: "+rawData, 1);
-								break;
-							case "INTEGER_POSITIVE":
-								add("Row: "+lineNr+"->Before cleaning: "+rawData, 1);									 
-								//Remove negative or zero values for data type INTEGER_POSITIVE
-								if(rawData<=0)rawData=void 0;
-								add("Row: "+lineNr+"->After cleaning: "+rawData, 1);
-								break;
-							case "TRUE_ONLY":
-								add("Row: "+lineNr+"->Before cleaning: "+rawData, 1);
-								if(typeof rawData === "string"){
-									rawData = rawData.replace(/['"]+/g,'');
-								}else{
-									rawData = rawData.replace(/['"]+/g,'');
-								}
-								//Using regular expressions, replace all char sequences with letters 
-								// T/t R/r U/u E/e with "true"
-								rawData.replace(/true/gi, "true");
-								if(!(isTrue.test(rawData))){
-									rawData=void 0;
-								}
-								add("Row: "+lineNr+"->After cleaning: "+rawData, 1);
-								break;
-							default:
-								add("Row: "+lineNr+"->No cleaning operation defined for data type: "+valueType, 1);
-							}								
-							//check if value is within set of valid options for option sets:
-							if(dataElementsHasOptionSet.get(dataElement))
-							{
-								add("Row: "+lineNr+"->Data element with ID:\""+dataElement+"\" label \"" + label + "\" and value type \"" + valueType +
-										"\" has option set with ID: \""+ optionSetId +"\"", 1);
-								if(optionMap.has(optionSetId)){
-									add("Row: "+lineNr+"->Option map has "+optionMap.size +" valid values.", 1);
-									var optionSet = optionMap.get(optionSetId);
-									add("Row: "+lineNr+"->Option set has "+optionSet.length+" valid values:", 1);
-									for (var i = 0; i < optionSet.length; i++) {
-										if(options.has(optionSet[i])){
-											add("Row: "+lineNr+"> Option "+i+" Id: "+optionSet[i]+" Value: "+ options.get(optionSet[i]), 1);
-										}else{
-											add("Row: "+lineNr+"->Option "+i+" Id: "+optionSet[i], 4);
-										}
-									}										
-									var valueInOptionSet = false;									
-									for (var i = 0; i < optionSet.length; i++) {											
-										if(options.has(optionSet[i])){
-											var option = options.get(optionSet[i]);
-										}else{
-											add("Row: "+lineNr+"->Option with ID: "+optionSet[i]+" is not available",4);
-											add("Row: "+lineNr+"->Available options are: ",4);
-											for (const [k,v] of options.entries()) {
-												add("key: "+k+"\tvalue: "+v, 4);
-											}	
-											rejected=true;		
-											hasErrors=true;
-											//return true;	
-										}											
-										switch (valueType) {								 
-										case "LONG_TEXT":
-										case "TEXT":
-											rawData = String(rawData);
-											//If the text string matches the option (upper/lower case is ignored)
-											if(rawData.toUpperCase() === option.toUpperCase()){
-												add("Row: "+lineNr+"->Value: "+rawData+" matches option "+option+"!",1);
-												rawData = option;
-												valueInOptionSet = true;
-												break;
-											}else{
-												add("Row: "+lineNr+"->Value: " + rawData + " does NOT match option "+option+"!",1);	
-												break;
-											}
-										default:  
-											//If the text string matches the option (upper/lower case is ignored)
-											if(rawData === option){
-												add("Row: "+lineNr+"->Value: "+rawData+" of data type "+ valueType +" matches option "+option+"!",1);
-												rawData = option;
-												valueInOptionSet = true;
-												break;
-											}else{
-												add("value: " + rawData +" of data type "+ valueType + " does NOT match option "+option+"!",1);
-												break;
-											}
-										}										   
-									}
-									if(valueInOptionSet == false){
-										add("Row: "+lineNr+"->Invalid value \""+rawData+"\" for option set: "+optionSetId, 4);
-										rejected=true;		
-										hasErrors=true;
-									}
-								}else{
-									add("Row: "+lineNr+"->Error! No options defined for option set with ID: "+optionSetId, 4);
-								}
-							}
-							dv.value = rawData;
+							var rawData = cleanValue(arrayItem[label], dataElement, lineNr);
+							dv.value = checkOptionSet(rawData, dataElement, lineNr);
 							if(!rejected){
 								eventDataValue.dataValues.push(dv);
 							}
@@ -2536,7 +2431,10 @@ function processDataset(){
 					rowValues.orgUnit = arrayItem.orgUnit;
 					rowValues.categoryOptionCombo = arrayItem.categoryOptionCombo;
 					rowValues.attributeOptionCombo = arrayItem.attributeOptionCombo;
-					rowValues.value = arrayItem.value;
+					rowValues.value = cleanValue(arrayItem.value, arrayItem.dataElement, lineNr);
+					rowValues.value = checkOptionSet(rowValues.value, arrayItem.dataElement, lineNr);
+					//abort if value indicates invalid option
+					if(rowValues.value === -9999)return -1;
 					rowValues.storedBy = arrayItem.storedBy;
 					rowValues.created = arrayItem.created;
 					rowValues.lastUpdated = arrayItem.lastUpdated;
@@ -2549,6 +2447,152 @@ function processDataset(){
 			}
 	)	
 }
+
+/**
+ * Cleans the raw value based on the data element value type.
+ * @param rawData This is the string describing the data value.
+ * @param dataElement This is the data element ID.
+ * @returns The cleaned data value.
+ */
+function cleanValue(rawData, dataElement, lineNr){
+	
+	var label = dataElementsLabel.get(dataElement);
+	var valueType = dataElementsValueType.get(dataElement);
+
+	switch (valueType) {								 
+		case "COORDINATE":
+		case "LONG_TEXT":
+		case "TEXT":
+			add("before cleaning: "+rawData, 1);
+			//Remove all inner quotes and escapes from strings
+			if(typeof rawData === "string"){
+				rawData = rawData.replace(/['"]+/g,'');
+			}else{
+				rawData = rawData.replace(/['"]+/g,'');
+			}
+			add("Row: "+lineNr+"->after cleaning: "+rawData, 1);
+			return rawData;
+		case "INTEGER_ZERO_OR_POSITIVE":
+			add("Row: "+lineNr+"->Before cleaning: "+rawData, 1);									 
+			//Remove negative or zero values for data type INTEGER_POSITIVE
+			if(rawData<0)rawData=void 0;
+			add("Row: "+lineNr+"->After cleaning: "+rawData, 1);
+			return rawData;
+		case "INTEGER_POSITIVE":
+			add("Row: "+lineNr+"->Before cleaning: "+rawData, 1);									 
+			//Remove negative or zero values for data type INTEGER_POSITIVE
+			if(rawData<=0)rawData=void 0;
+			add("Row: "+lineNr+"->After cleaning: "+rawData, 1);
+			return rawData;
+		case "TRUE_ONLY":
+			add("Row: "+lineNr+"->Before cleaning: "+rawData, 1);
+			if(typeof rawData === "string"){
+				rawData = rawData.replace(/['"]+/g,'');
+			}else{
+				rawData = rawData.replace(/['"]+/g,'');
+			}
+			//Using regular expressions, replace all char sequences with letters 
+			// T/t R/r U/u E/e with "true"
+			rawData.replace(/true/gi, "true");
+			if(!(isTrue.test(rawData))){
+				rawData=void 0;
+			}
+			add("Row: "+lineNr+"->After cleaning: "+rawData, 1);
+			return rawData;
+		default:
+			add("Row: "+lineNr+"->No cleaning operation defined for data type: "+valueType, 1);
+			return rawData;
+	}
+
+}
+
+/**
+ * Checks if the value is within the set of feasible options for this data element.
+ * @param rawData This is the string describing the data value.
+ * @param dataElement This is the data element ID.
+ * @returns The cleaned data value.
+ */
+function checkOptionSet(rawData, dataElement, lineNr){
+	
+	var label = dataElementsLabel.get(dataElement);
+	var valueType = dataElementsValueType.get(dataElement);
+	var optionSetId = dataElementsOptionSet.get(dataElement);
+	if(dataElementsHasOptionSet.get(dataElement) && isNullOrUndefinedOrEmptyString(optionSetId)){							
+		add("Row: "+lineNr+"->Error! The option set is not defined: ", optionSetId, 4);
+	}								
+	
+	//check if value is within set of valid options for option sets:
+	if(dataElementsHasOptionSet.get(dataElement))
+	{
+		add("Row: "+lineNr+"->Data element with ID:\""+dataElement+"\" label \"" + label + "\" and value type \"" + valueType +
+				"\" has option set with ID: \""+ optionSetId +"\"", 1);
+		if(optionMap.has(optionSetId)){
+			add("Row: "+lineNr+"->Option map has "+optionMap.size +" valid values.", 1);
+			var optionSet = optionMap.get(optionSetId);
+			add("Row: "+lineNr+"->Option set has "+optionSet.length+" valid values:", 1);
+			for (var i = 0; i < optionSet.length; i++) {
+				if(options.has(optionSet[i])){
+					add("Row: "+lineNr+"> Option "+i+" Id: "+optionSet[i]+" Value: "+ options.get(optionSet[i]), 1);
+				}else{
+					add("Row: "+lineNr+"->Option "+i+" Id: "+optionSet[i], 4);
+				}
+			}										
+			var valueInOptionSet = false;									
+			for (var i = 0; i < optionSet.length; i++) {											
+				if(options.has(optionSet[i])){
+					var option = options.get(optionSet[i]);
+				}else{
+					add("Row: "+lineNr+"->Option with ID: "+optionSet[i]+" is not available",4);
+					add("Row: "+lineNr+"->Available options are: ",4);
+					for (const [k,v] of options.entries()) {
+						add("key: "+k+"\tvalue: "+v, 4);
+					}	
+					rejected=true;		
+				}											
+				switch (valueType) {								 
+				case "LONG_TEXT":
+				case "TEXT":
+					rawData = String(rawData);
+					//If the text string matches the option (upper/lower case is ignored)
+					if(rawData.toUpperCase() === option.toUpperCase()){
+						add("Row: "+lineNr+"->Value: "+rawData+" matches option "+option+"!",1);
+						rawData = option;
+						valueInOptionSet = true;
+						break;
+					}else{
+						add("Row: "+lineNr+"->Value: " + rawData + " does NOT match option "+option+"!",1);	
+						break;
+					}
+				default:  
+					//If the text string matches the option (upper/lower case is ignored)
+					if(rawData === option){
+						add("Row: "+lineNr+"->Value: "+rawData+" of data type "+ valueType +" matches option "+option+"!",1);
+						rawData = option;
+						valueInOptionSet = true;
+						break;
+					}else{
+						add("value: " + rawData +" of data type "+ valueType + " does NOT match option "+option+"!",1);
+						break;
+					}
+				}										   
+			}
+			if(valueInOptionSet == false){
+				add("Row: "+lineNr+"->Invalid value \""+rawData+"\" for option set: "+optionSetId, 4);
+				rejected=true;		
+			}
+		}else{
+			add("Row: "+lineNr+"->Error! No options defined for option set with ID: "+optionSetId, 4);
+			rejected=true;	
+		}
+	}
+	if(rejected){
+		add("Row: "+lineNr+"->Error! Data upload has to be aborted!", 4);
+		return -9999;
+	}else{
+		return rawData;
+	}
+}
+
 /**
  * Function checks if a given point is inside a polygon.
  * Sources:
