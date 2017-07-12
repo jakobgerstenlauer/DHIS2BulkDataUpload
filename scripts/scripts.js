@@ -37,7 +37,8 @@ var dataValues = [];
 var eventDataValues = [];
 var errorString = "";
 var hasErrors = false;
-
+//code for an invalid value returned by checkOptionSet()
+var CODE_INVALID_VALUE = -9999;
 //Dataset period of data collection (has to be set to one of the possible options of the PeriodTypeEnum (below).
 var periodType;
 
@@ -2367,7 +2368,10 @@ function processProgramData(){
 						//Test if the json object representing the row has the property label:
 						if(arrayItem.hasOwnProperty(label)){								
 							var rawData = cleanValue(arrayItem[label], dataElement, lineNr);
-							dv.value = checkOptionSet(rawData, dataElement, lineNr);
+							rawData = checkOptionSet(rawData, dataElement, lineNr);
+							//abort if the data value indicates an invalid value!
+							if(rawData === CODE_INVALID_VALUE)return -1;
+							dv.value = rawData;
 							if(!rejected){
 								eventDataValue.dataValues.push(dv);
 							}
@@ -2434,7 +2438,7 @@ function processDataset(){
 					rowValues.value = cleanValue(arrayItem.value, arrayItem.dataElement, lineNr);
 					rowValues.value = checkOptionSet(rowValues.value, arrayItem.dataElement, lineNr);
 					//abort if value indicates invalid option
-					if(rowValues.value === -9999)return -1;
+					if(rowValues.value === CODE_INVALID_VALUE)return -1;
 					rowValues.storedBy = arrayItem.storedBy;
 					rowValues.created = arrayItem.created;
 					rowValues.lastUpdated = arrayItem.lastUpdated;
@@ -2587,7 +2591,7 @@ function checkOptionSet(rawData, dataElement, lineNr){
 	}
 	if(rejected){
 		add("Row: "+lineNr+"->Error! Data upload has to be aborted!", 4);
-		return -9999;
+		return CODE_INVALID_VALUE;
 	}else{
 		return rawData;
 	}
