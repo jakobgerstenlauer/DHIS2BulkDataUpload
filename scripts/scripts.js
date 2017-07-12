@@ -1758,7 +1758,7 @@ function getCompleteData(){
  * @returns
  */
 function getImportStrategy(){
-	switch(getSelectValue("ChooseImportStrategy")){
+	switch(parseInt(getSelectValue("ChooseImportStrategy"))){
 	case 1: return "CREATE"
 	case 2: return "UPDATE"
 	case 3: return "CREATE_AND_UPDATE"
@@ -1800,8 +1800,8 @@ function importDataFromDataSet(valuesToImport){
 						}
 					}
 					
-					if(imported === valuesToImport){
-						add("All "+ valuesToImport +" data elements were successfully imported in the dry run!", 3)
+					if(ignored === 0){
+						add("No data elements were ignored in the dry run!", 3)
 						add("Now the real import of data starts!", 3)
 						
 						$.ajax({
