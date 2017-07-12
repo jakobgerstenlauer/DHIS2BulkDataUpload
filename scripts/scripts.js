@@ -2518,6 +2518,7 @@ function cleanValue(rawData, dataElement, lineNr){
  */
 function checkOptionSet(rawData, dataElement, lineNr){
 	
+	var rejected = false;
 	var label = dataElementsLabel.get(dataElement);
 	var valueType = dataElementsValueType.get(dataElement);
 	var optionSetId = dataElementsOptionSet.get(dataElement);
