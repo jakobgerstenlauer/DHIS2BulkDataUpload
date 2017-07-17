@@ -612,7 +612,7 @@ function queryCategoryOptionCombo(categoryOptionComboId, dataSet) {
 			}else{
 				CategoryOptionCombo_Map.set(categoryOptionComboId, json.displayName);
 			}
-	    })
+	    }).done(function(){if(dataSet)tryToCreateDataSetOptionsDropDown();})
 }
 
 /**
@@ -681,7 +681,7 @@ function tryToCreateDataSetOptionsDropDown(){
 	if(sel && (dataSetOptionMap.size > 0)){
 			createDataSetOptionsDropDown();
 	}else{
-		sleep (1000);
+		sleep (3000);
 		tryToCreateDataSetOptionsDropDown();
 	}
 }
