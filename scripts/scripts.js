@@ -74,14 +74,14 @@ function getPeriodType(name){
 var dataElementIDsCategoryComboIDMap = new Map();
 
 //key: category combo id, value: category option combo id
-var categoryCombo_CategoryOptionCombo_Map = new Map();
+var comboOptionMap = new Map();
 
 //This map stores the category options for the data set
 //key: category option combo id, value: display name
 var dataSetOptionMap = new Map();
 
 //key: category option combo id, value: display name
-var CategoryOptionCombo_Map = new Map();
+var comboLabelMap = new Map();
 
 //Map used to go from PROGRAMID to Category Combo
 var programsIDtoCategoryCombo = new Map();
@@ -592,10 +592,10 @@ function queryCategoryCombo(categoryComboId, forDataSet) {
 			categoryOptions.push(val.id)
 			queryCategoryOptionCombo(val.id, forDataSet);
 		})
-		if (!forDataSet){
-			categoryCombo_CategoryOptionCombo_Map.clear();
-			categoryCombo_CategoryOptionCombo_Map.set(categoryComboId, categoryOptions);
-		}
+		//if (!forDataSet){
+			//comboOptionMap.clear();
+			comboOptionMap.set(categoryComboId, categoryOptions);
+		//}
 	})
 }
 
@@ -609,7 +609,7 @@ function queryCategoryOptionCombo(categoryOptionComboId, dataSet) {
 			if(dataSet){
 				dataSetOptionMap.set(categoryOptionComboId, json.displayName);
 			}else{
-				CategoryOptionCombo_Map.set(categoryOptionComboId, json.displayName);
+				comboLabelMap.set(categoryOptionComboId, json.displayName);
 			}
 	    }).done(function(){if(dataSet)tryToCreateDataSetOptionsDropDown();})
 }
@@ -1140,7 +1140,7 @@ $.getJSON(apiBaseUrl+"/programStageDataElements/"+ dataElement +".json?&paging=f
 function clearDataElementAttributes(){
 	dataElementIDsCategoryComboIDMap.clear();
 	dataSetOptionMap.clear();
-	categoryCombo_CategoryOptionCombo_Map.clear();
+	comboOptionMap.clear();
 	dataElementIDs.clear();
 	dataElementsLabel.clear();
 	dataElementsValueType.clear();
@@ -1322,6 +1322,25 @@ function getCurrentTime(){
 }
 
 /**
+ * Retrieves new label from map and returns informative label only if no identical with old value for label.
+ * The old value of the label is only updated if the label is new.
+ * 
+ * @param map The map from which the new label is retrieved.
+ * @param key The key for retrieving the label from the map.
+ * @param old The old value of the label.
+ * @returns A new JavaScript object with two slots.
+ */
+function getLabel(map, key, old){
+	var label = map.get(key);
+	if(label === old){
+		label=""
+	}else{
+		old = label;
+	}
+	return {label, old};
+}
+
+/**
  * Generates a new template spreadsheet.
  * 
  * @param forDataSet Should this spreadsheet be generated for a dataset? If not it is for a program.
@@ -1331,9 +1350,14 @@ function getSpreadsheet(forDataSet) {
 
 	console.log("Start getSpreadsheet().")
 	var numOfElements = dataElementIDs.size;
+	
 	var dataElementsSectionLabel_Array = new Array(numOfElements);
 	var dataElementsLabel_Array = new Array(numOfElements);
-	var dataElementsOptionsLabel_Array = new Array(dataSetOptionMap.size());		
+	var section_header = new Array(dataSetOptionMap.size);		
+	var data_element_header = new Array(dataSetOptionMap.size);
+	var option_header = new Array(dataSetOptionMap.size);
+	var dataElementOptionArray  = new Array(dataSetOptionMap.size);
+	var dataElementOptionLabelArray = new Array(dataSetOptionMap.size);
 	var dataElementsValueType_Array = new Array(numOfElements);
 	var dataElementsIDs_Array = new Array(numOfElements);
 	var dataElementsDescription_Array = new Array(numOfElements);
@@ -1348,7 +1372,9 @@ function getSpreadsheet(forDataSet) {
 	for (var [key, value] of sectionDataElementMap.entries()) {
 		 var arrayOfDataElementIDs = value;		 
 		 console.log("dataElements: "+ arrayOfDataElementIDs.toString())
-		 for(let dataElementId of arrayOfDataElementIDs){		
+		 var section_label_old= "";
+		 for(let dataElementId of arrayOfDataElementIDs){	
+			var data_element_label_old= "";
 			dataElementsSectionLabel_Array[i]= sectionDisplayNameMap.get(key);
 		 	var dataElement;
 		 	if(forDataSet){
@@ -1359,17 +1385,34 @@ function getSpreadsheet(forDataSet) {
 		 	}
 		 	if(forDataSet){
 		 		console.log("i: "+i+" program stage data element: "+dataElementId+" dataElement: "+dataElement+" label: "+ dataElementsLabel.get(dataElement)+" description:"+dataElementsDescription.get(dataElement))
-			    
-		 		// Here I have to iterate over all the category option combinations for this data element!
-		 		// First, get the category combination:
-		 		var categoryComboID = dataElementIDsCategoryComboIDMap.get(dataElement);
-		 		// Then, get the set of options for this category combination:
-		 		var options = categoryCombo_CategoryOptionCombo_Map.get(categoryComboID);
-		 		
-		 		for (let option of options){
-		 			dataElementsOptionsLabel_Array[j]=dataElementsLabel.get(dataElement) + dataSetOptionMap.get(option);
-		 			j++
-				}
+			    		 		
+		 		if(dataElementIDsCategoryComboIDMap.has(dataElement) && comboOptionMap.has(dataElementIDsCategoryComboIDMap.get(dataElement)))
+		 		{
+		 			// Here I have to iterate over all the category option combinations for this data element!
+			 		// First, get the category combination:
+			 		var categoryComboID = dataElementIDsCategoryComboIDMap.get(dataElement);
+			 		// Then, get the set of options for this category combination:
+			 		var options = comboOptionMap.get(categoryComboID);
+			 		for (let option of options){
+			 			
+		 				var section_label = getLabel(sectionDisplayNameMap, key, section_label_old);
+		 				section_label_old = section_label.old
+		 				section_header[j]= section_label.label
+		 				
+		 				var data_element_label = getLabel(dataElementsLabel, dataElement, data_element_label_old);
+		 				data_element_label_old = data_element_label.old
+		 				data_element_header[j]= data_element_label.label
+		 				dataElementOptionArray[j] = dataElement + "#" + option;
+		 				dataElementOptionLabelArray[j] = "dataElementOptionNr"+j;
+		 				option_header[j]= comboLabelMap.get(option);
+			 			j++;
+					}
+		 		}else{
+		 			section_header[j]= sectionDisplayNameMap.get(key);
+				 	data_element_header[j]= dataElementsLabel.get(dataElement);
+				 	option_header[j]="";
+		 			j++;
+		 		}
 		 		
 		 		dataElementsLabel_Array[i]=dataElementsLabel.get(dataElement);
 		 		dataElementsValueType_Array[i]=dataElementsValueType.get(dataElement);
@@ -1459,7 +1502,9 @@ function getSpreadsheet(forDataSet) {
 				// https://docs.dhis2.org/master/en/developer/html/dhis2_developer_manual_full.html#webapi_sending_bulks_data_values
 				// {"dataElement":"r93CGkSemDg","period":"2016","orgUnit":"uZZhXR5xxmV","categoryOptionCombo":"rUqhQb4yK70","attributeOptionCombo":"WXQU0xM4tNh","value":"5","storedBy":"admin","created":"2017-07-04T12:35:37.554+0000","lastUpdated":"2017-07-04T12:35:37.554+0000","followUp":false}
 				// I prepend two additional columns with labels which have to be deleted before the upload:
-				[].concat.apply([],["OrgUnitName","OrgUnitID", "Period", dataElementsOptionsLabel_Array])
+				[].concat.apply([],["Section:", section_header]),
+				[].concat.apply([],["Data element:", data_element_header]),
+				[].concat.apply([],["Period|Option:", option_header])
 			];
 		}else{
 			output_array_sheet_1 = [
@@ -1539,10 +1584,10 @@ function getSpreadsheet(forDataSet) {
 				// creating the header of the table	  
 				// create first table row
 				// ProgramId,GfOWfC9blOI,ProgramStage,JP8t81g0uIT,,,,
-				[].concat.apply([],["DataSetId","Period","DataSetName","OrganisationalUnit","OrgUnitId","UnofficialOrganisationalUnit", "IdUnofficialOrgUnit", dataElementsLabel_Array]),
+				[].concat.apply([],["DataSetId","DataSetName","OrganisationalUnit","OrgUnitId","DataSetCategoryOptionCombo",dataElementOptionLabelArray]),
 				// create second table row
 				//Description,Health ministry officers manage collective dwelling inspections,,,,,,
-				[].concat.apply([],[dataSet_id, period, dataSet_name, org_unit_name, org_unit_id, non_off_org_unit, non_off_org_unit_id, dataElementsIDs_Array])
+				[].concat.apply([],[dataSet_id, dataSet_name, org_unit_name, org_unit_id, getSelectValue ("ListOfDataSetOptions"),dataElementOptionArray])
 		];
 		}else{
 			output_array_sheet_3 = [

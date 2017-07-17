@@ -117,7 +117,7 @@ function Selection()
     	
     	for(let org_unit_id of selected){
     		//delete if unselected
-    		if(org_unit_ids.contains(org_unit_id)){
+    		if(org_unit_ids.has(org_unit_id)){
     			org_unit_ids.delete(org_unit_id);
 	    		orgUnitNames.delete(org_unit_id);
     		}else{
