@@ -577,7 +577,7 @@ function queryDataSet() {
 
 
 /**
- * Queries category combos for individual data elements or for the data set as a whole.
+ * Queries category combinations for individual data elements or for the data set as a whole.
  * CategoryCombos:
 	http://who-dev.essi.upc.edu:8086/api/categoryCombos
  */
@@ -604,7 +604,6 @@ function queryCategoryCombo(categoryComboId, forDataSet) {
 	http://who-dev.essi.upc.edu:8086/api/categoryCombos
  */
 function queryCategoryOptionCombo(categoryOptionComboId, dataSet) {
-		//Retrieve the data elements of this data set.
 		$.getJSON(apiBaseUrl+"/categoryOptionCombos/"+categoryOptionComboId+".json?paging=false&fields=displayName", 
 		function (json) {
 			if(dataSet){
@@ -1334,6 +1333,7 @@ function getSpreadsheet(forDataSet) {
 	var numOfElements = dataElementIDs.size;
 	var dataElementsSectionLabel_Array = new Array(numOfElements);
 	var dataElementsLabel_Array = new Array(numOfElements);
+	var dataElementsOptionsLabel_Array = new Array(dataSetOptionMap.size());		
 	var dataElementsValueType_Array = new Array(numOfElements);
 	var dataElementsIDs_Array = new Array(numOfElements);
 	var dataElementsDescription_Array = new Array(numOfElements);
@@ -1344,7 +1344,7 @@ function getSpreadsheet(forDataSet) {
 	}
 	
 	//Here we order the data elements according to the order of the sections of the program.
-	var i = 0;
+	var i = 0; var j =0;
 	for (var [key, value] of sectionDataElementMap.entries()) {
 		 var arrayOfDataElementIDs = value;		 
 		 console.log("dataElements: "+ arrayOfDataElementIDs.toString())
@@ -1354,16 +1354,38 @@ function getSpreadsheet(forDataSet) {
 		 	if(forDataSet){
 		 		dataElement = dataElementId;
 		 	}else{
-		 		//Translate from the program stage data element ID to the data element ID if we are working with programs:
+		 		//Translate from the program stage data element ID to the data element ID, if we are working with programs:
 		 		dataElement = programStageDataElementMap.get(dataElementId);
 		 	}
-		 	console.log("i: "+i+" program stage data element: "+dataElementId+" dataElement: "+dataElement+" label: "+ dataElementsLabel.get(dataElement)+" description:"+dataElementsDescription.get(dataElement))
-		    dataElementsLabel_Array[i]=dataElementsLabel.get(dataElement);
-			dataElementsValueType_Array[i]=dataElementsValueType.get(dataElement);
-			dataElementsIDs_Array[i]=dataElement;
-			dataElementsDescription_Array[i]=dataElementsDescription.get(dataElement);
-			dataElementsCompulsory_Array[i]=dataElementsCompulsory.get(dataElement);
-			i++;
+		 	if(forDataSet){
+		 		console.log("i: "+i+" program stage data element: "+dataElementId+" dataElement: "+dataElement+" label: "+ dataElementsLabel.get(dataElement)+" description:"+dataElementsDescription.get(dataElement))
+			    
+		 		// Here I have to iterate over all the category option combinations for this data element!
+		 		// First, get the category combination:
+		 		var categoryComboID = dataElementIDsCategoryComboIDMap.get(dataElement);
+		 		// Then, get the set of options for this category combination:
+		 		var options = categoryCombo_CategoryOptionCombo_Map.get(categoryComboID);
+		 		
+		 		for (let option of options){
+		 			dataElementsOptionsLabel_Array[j]=dataElementsLabel.get(dataElement) + dataSetOptionMap.get(option);
+		 			j++
+				}
+		 		
+		 		dataElementsLabel_Array[i]=dataElementsLabel.get(dataElement);
+		 		dataElementsValueType_Array[i]=dataElementsValueType.get(dataElement);
+				dataElementsIDs_Array[i]=dataElement;
+				dataElementsDescription_Array[i]=dataElementsDescription.get(dataElement);
+				dataElementsCompulsory_Array[i]=dataElementsCompulsory.get(dataElement);
+				i++;
+		 	}else{
+		 		console.log("i: "+i+" program stage data element: "+dataElementId+" dataElement: "+dataElement+" label: "+ dataElementsLabel.get(dataElement)+" description:"+dataElementsDescription.get(dataElement))
+			    dataElementsLabel_Array[i]=dataElementsLabel.get(dataElement);
+				dataElementsValueType_Array[i]=dataElementsValueType.get(dataElement);
+				dataElementsIDs_Array[i]=dataElement;
+				dataElementsDescription_Array[i]=dataElementsDescription.get(dataElement);
+				dataElementsCompulsory_Array[i]=dataElementsCompulsory.get(dataElement);
+				i++;
+		 	}		 	
 		}	
 	}
 	
@@ -1437,68 +1459,8 @@ function getSpreadsheet(forDataSet) {
 				// https://docs.dhis2.org/master/en/developer/html/dhis2_developer_manual_full.html#webapi_sending_bulks_data_values
 				// {"dataElement":"r93CGkSemDg","period":"2016","orgUnit":"uZZhXR5xxmV","categoryOptionCombo":"rUqhQb4yK70","attributeOptionCombo":"WXQU0xM4tNh","value":"5","storedBy":"admin","created":"2017-07-04T12:35:37.554+0000","lastUpdated":"2017-07-04T12:35:37.554+0000","followUp":false}
 				// I prepend two additional columns with labels which have to be deleted before the upload:
-
-				[].concat.apply([],["OrgUnitName","DataElementLabel","OptionLabel",
-					"dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value","storedBy","created","lastUpdated","followUp"])
+				[].concat.apply([],["OrgUnitName","OrgUnitID", "Period", dataElementsOptionsLabel_Array])
 			];
-			
-			var now = getCurrentTime();
-			
-			//Loop over all selected org-units
-			for(let org_unit_id of org_unit_ids){
-				
-				//Loop over all periods
-				for(let period of getPeriods()){
-				
-					//Loop over all data elements
-					for (let dataElementID of dataElementIDs.keys()){
-						
-						var categoryComboID = dataElementIDsCategoryComboIDMap.get(dataElementID);
-						
-						var categoryOptionCombos;
-						if(!categoryCombo_CategoryOptionCombo_Map.has(categoryComboID)){
-							add("There are no category option combos defined for the category combo "+categoryComboID+" !", 4)
-							var dummyArray = [];
-							dummyArray [0]= categoryComboID;
-							categoryOptionCombos = dummyArray;
-						}else{
-							categoryOptionCombos = categoryCombo_CategoryOptionCombo_Map.get(categoryComboID);
-						}
-							
-						//Loop over all category-option-combos
-						for(let categoryOptionComboID of categoryOptionCombos){
-							
-							var new_row = new Array(13);
-							//label of data or unit
-							new_row[0]=orgUnitNames.get(org_unit_id);
-							//label of data element
-							new_row[1]=dataElementsLabel.get(dataElementID);
-							//label of the category option combo
-							new_row[2]=CategoryOptionCombo_Map.get(categoryOptionComboID);
-							
-							new_row[3]=dataElementID;
-							new_row[4]=period;
-							new_row[5]=org_unit_id;
-							new_row[6]=categoryOptionComboID;
-							//ID of the attribute option combo:
-							new_row[7]=getSelectValue ("ListOfDataSetOptions");
-							//value
-							new_row[8]=0.0;						
-							//stored by
-							new_row[9]=userName;		
-							//created
-							new_row[10]=now;
-							//last updated
-							new_row[11]=now;
-							//follow up
-							new_row[12]="false";
-							//append new line with data element ID, period, orgunit, category-option-combo ID, category-option-combo name, leave rest open
-							output_array_sheet_1.push(new_row);
-						}
-					}
-				}
-			}
-		
 		}else{
 			output_array_sheet_1 = [
 				//dataElementsSectionLabel_Array
@@ -1506,7 +1468,7 @@ function getSpreadsheet(forDataSet) {
 				[,,,,,,,,]
 			];
 		}
-		
+			
 		//console.log(output_array_sheet_1);
 		var output_array_sheet_2 = [];
 		if(forDataSet){
