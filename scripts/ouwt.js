@@ -116,8 +116,14 @@ function Selection()
     	getPolygon(org_unit_id,1);
     	
     	for(let org_unit_id of selected){
-    		org_unit_ids.add(org_unit_id);
-    		orgUnitNames.set(org_unit_id,organisationUnits[org_unit_id].n);
+    		//delete if unselected
+    		if(org_unit_ids.contains(org_unit_id)){
+    			org_unit_ids.delete(org_unit_id);
+	    		orgUnitNames.delete(org_unit_id);
+    		}else{
+	    		org_unit_ids.add(org_unit_id);
+	    		orgUnitNames.set(org_unit_id,organisationUnits[org_unit_id].n);
+    		}
     	}
     };
     
