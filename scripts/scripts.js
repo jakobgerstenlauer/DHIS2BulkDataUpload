@@ -513,16 +513,21 @@ function showPeriodOptions(){
         add("Invalid value for period!"+getSelectValue ("whichPeriod"),4)
 	}
 }
+
+/**
+ * Hides the "getSpreadsheetDataSet" and the "uploadSpreadsheet" button  and clears the options of the data set selection button.
+ * @returns
+ */
 function clearDataSetSelectButtons(){
 	$("#getSpreadsheetDataSet").prop("hidden",true);
 	$("#uploadSpreadsheet").prop("disabled",true);
 	clearSelectButton("ListOfDataSetOptions");	
-	//clearSelectButton("periodYear");
-	//clearSelectButton("periodMonth");		
-	//clearSelectButton("periodWeek");
-	//clearSelectButton("periodDay");
 }
 
+/**
+ * Queries all relevant information about the selected data set from the dataSets endpoint and creates . 
+ * @returns
+ */
 function queryDataSet() {
 	
 	clearDataElementAttributes();
@@ -606,10 +611,6 @@ function queryCategoryOptionCombo(categoryOptionComboId, dataSet) {
 				dataSetOptionMap.set(categoryOptionComboId, json.displayName);
 			}else{
 				CategoryOptionCombo_Map.set(categoryOptionComboId, json.displayName);
-			}
-	    }).done(function(){
-	    	if(dataSet){
-				tryToCreateDataSetOptionsDropDown();
 			}
 	    })
 }
