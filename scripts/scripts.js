@@ -1783,7 +1783,6 @@ function getImportStrategy(){
 	case 1: return "CREATE"
 	case 2: return "UPDATE"
 	case 3: return "CREATE_AND_UPDATE"
-	case 4: return "DELETE"
 	default: add("Unknown value for import strategy!",4)
 	}
 }
@@ -1831,8 +1830,8 @@ function importDataFromDataSet(valuesToImport){
 							},
 							async: false
 						}).done(function(res) {
-							onbeforeunload();
 							add("Successful data upload!",3);
+							onbeforeunload();
 							resolve("Successful data upload!");
 						})
 						.fail(function (request, textStatus, errorThrown) {
