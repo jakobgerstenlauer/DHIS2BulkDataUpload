@@ -1832,6 +1832,7 @@ function importDataFromDataSet(valuesToImport){
 							async: false
 						}).done(function(res) {
 							onbeforeunload();
+							add("Successful data upload!",3);
 							resolve("Successful data upload!");
 						})
 						.fail(function (request, textStatus, errorThrown) {
