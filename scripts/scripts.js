@@ -1814,49 +1814,49 @@ function importDataFromDataSet(valuesToImport){
 					
 					if(isNullOrUndefined(res.conflicts)){
 						add("No problems found during test upload.",3)
+						if(ignored === 0){
+							add("No data elements were ignored in the dry run!", 3)
+							add("Now the real import of data starts!", 3)
+							
+							$.ajax({
+							method: "POST",
+							type: 'post',
+							url: apiBaseUrl + "/dataValueSets?dryRun=false&importStrategy="+importStrategy,
+							contentType: "application/json; charset=utf-8",
+							data: JSON.stringify(data),
+							dataType: 'json',
+							headers:{
+								'Accept': 'application/json',
+								'Content-Type': 'application/json'
+							},
+							async: false
+						}).done(function(res) {
+							onbeforeunload();
+							resolve("Successful data upload!");
+						})
+						.fail(function (request, textStatus, errorThrown) {
+							try
+							{			
+								add("The following request could not be processed:"+JSON.stringify(data), 4)
+							}
+							catch(ex)
+							{
+								add("Something went wrong while fetching event import error summary", 4);
+								add(ex, 4);
+								console.log(ex);
+								reject("Something went wrong while fetching event import error summary");
+							}			
+						})
+						}else{
+							reject("Error: Only "+ ignored + " out of " + valuesToImport +" imports were successful!")
+						}
 					}else{
 						//print the error messages in the field "conflicts":
 						for(let errorMessage of res.conflicts){
 							add("Error for data value \""+ errorMessage.object +"\" : "+ errorMessage.value, 4)
 						}
-					}
-					
-					if(ignored === 0){
-						add("No data elements were ignored in the dry run!", 3)
-						add("Now the real import of data starts!", 3)
-						
-						$.ajax({
-						method: "POST",
-						type: 'post',
-						url: apiBaseUrl + "/dataValueSets?dryRun=false&importStrategy="+importStrategy,
-						contentType: "application/json; charset=utf-8",
-						data: JSON.stringify(data),
-						dataType: 'json',
-						headers:{
-							'Accept': 'application/json',
-							'Content-Type': 'application/json'
-						},
-						async: false
-					}).done(function(res) {
-						onbeforeunload();
-						resolve("Successful data upload!");
-					})
-					.fail(function (request, textStatus, errorThrown) {
-						try
-						{			
-							add("The following request could not be processed:"+JSON.stringify(data), 4)
-						}
-						catch(ex)
-						{
-							add("Something went wrong while fetching event import error summary", 4);
-							add(ex, 4);
-							console.log(ex);
-							reject("Something went wrong while fetching event import error summary");
-						}			
-					})
-					}else{
-						reject("Error: Only "+ ignored + " out of " + valuesToImport +" imports were successful!")
-					}
+						add("The data upload failed!",3)
+					}		
 				})
 				.fail(function (request, textStatus, errorThrown) {
 					try
