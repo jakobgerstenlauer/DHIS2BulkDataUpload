@@ -60,7 +60,6 @@ var PeriodTypeEnum = {
 		  }
 		};
 
-
 function getPeriodType(name){
 	switch(name){
 		case("Daily"):return PeriodTypeEnum.DAILY
