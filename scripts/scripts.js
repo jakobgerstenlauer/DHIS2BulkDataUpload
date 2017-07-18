@@ -1787,7 +1787,7 @@ function getImportStrategy(){
 	}
 }
 
-function importDataFromDataSet(valuesToImport){
+function importDataFromDataSet(){
 	return new Promise(
 			function (resolve, reject) {
 				var importStrategy = getImportStrategy();
@@ -1848,7 +1848,7 @@ function importDataFromDataSet(valuesToImport){
 							}			
 						})
 						}else{
-							reject("Error: Only "+ ignored + " out of " + valuesToImport +" imports were successful!")
+							reject("Error: Only "+ ignored + " imports were successful!")
 						}
 					}else{
 						//print the error messages in the field "conflicts":
@@ -2478,7 +2478,10 @@ function processDataset(){
 								rowValues.value = cleanValue(arrayItem[columnLabel], dataElementIDArray[i], lineNr);
 								rowValues.value = checkOptionSet(rowValues.value, dataElementIDArray[i], lineNr);
 								//abort if value indicates invalid option
-								if(rowValues.value === CODE_INVALID_VALUE)return -1;
+								if(rowValues.value === CODE_INVALID_VALUE){
+									add("Invalid value!",4)
+									return -1;	
+								}
 								rowValues.storedBy = userName;
 								rowValues.created = now;
 								rowValues.lastUpdated = now;
