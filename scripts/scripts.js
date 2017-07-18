@@ -467,7 +467,7 @@ function queryDataSetsApi() {
 		})
 	}).done(function(){	
 		if(authorizedDataSets===0){
-			add("You are not authorized to edit any data sets!",1);
+			add("You are not authorized to edit any data sets!",4);
 			return;
 		}
 		if((dataSetCounter===0)&&(authorizedDataSets > 0)){
@@ -1352,6 +1352,7 @@ function getSpreadsheet(forDataSet) {
 	
 	var dataElementsSectionLabel_Array = new Array(numOfElements);
 	var dataElementsLabel_Array = new Array(numOfElements);
+	var column_header = new Array(dataSetOptionMap.size);		
 	var section_header = new Array(dataSetOptionMap.size);		
 	var data_element_header = new Array(dataSetOptionMap.size);
 	var option_header = new Array(dataSetOptionMap.size);
@@ -1397,7 +1398,8 @@ function getSpreadsheet(forDataSet) {
 		 				var section_label = getLabel(sectionDisplayNameMap, key, section_label_old);
 		 				section_label_old = section_label.old
 		 				section_header[j]= section_label.label
-		 				
+		 				column_header[j] = "Column"+j;
+
 		 				var data_element_label = getLabel(dataElementsLabel, dataElement, data_element_label_old);
 		 				data_element_label_old = data_element_label.old
 		 				data_element_header[j]= data_element_label.label
@@ -1501,7 +1503,8 @@ function getSpreadsheet(forDataSet) {
 				// https://docs.dhis2.org/master/en/developer/html/dhis2_developer_manual_full.html#webapi_sending_bulks_data_values
 				// {"dataElement":"r93CGkSemDg","period":"2016","orgUnit":"uZZhXR5xxmV","categoryOptionCombo":"rUqhQb4yK70","attributeOptionCombo":"WXQU0xM4tNh","value":"5","storedBy":"admin","created":"2017-07-04T12:35:37.554+0000","lastUpdated":"2017-07-04T12:35:37.554+0000","followUp":false}
 				// I prepend two additional columns with labels which have to be deleted before the upload:
-				[].concat.apply([],["Section:", section_header]),
+				[].concat.apply([],[column_header]),
+				[].concat.apply([],["Section", section_header]),
 				[].concat.apply([],["Data element:", data_element_header]),
 				[].concat.apply([],["Period|Option:", option_header])
 			];
@@ -2430,30 +2433,64 @@ function processDataset(){
 				data = {};
 				data.dataValues = [];
 				var lineNr=0;
-
-				//Iterate over all the rows, which are the inner arrays of the json array of arrays.
-				// {"dataElement":"r93CGkSemDg","period":"2016","orgUnit":"uZZhXR5xxmV","categoryOptionCombo":"rUqhQb4yK70","attributeOptionCombo":"WXQU0xM4tNh","value":"5","storedBy":"admin","created":"2017-07-04T12:35:37.554+0000","lastUpdated":"2017-07-04T12:35:37.554+0000","followUp":false}
+				var now = getCurrentTime();
 				
+				//get metadata
+				var metaData = metaDataArray[0];
+				var orgUnitID = metaData.OrgUnitId;
+				var attributeOptionCombo = metaData.DataSetCategoryOptionCombo;
+				//number of data entries
+				var numColumns = 0;
+				var MAX_DATA_ENTRIES_PER_ROW = 1000;
+				var dataElementIDArray = new Array(MAX_DATA_ENTRIES_PER_ROW);
+				var optionIDArray = new Array(MAX_DATA_ENTRIES_PER_ROW);
+				
+				for(var i = 0; i < MAX_DATA_ENTRIES_PER_ROW; i++){
+					var label = "dataElementOptionNr" + i
+					if(metaData.hasOwnProperty(label)){	
+						numColumns++;
+						var elementID = metaData[label];
+						var IDS = elementID.split("#");
+						dataElementIDArray[i]=IDS[0];
+						optionIDArray[i]=IDS[1];
+					}else{
+						break;
+					}
+				}
+				
+				var processedDataEntries = 0;
+				
+				//Iterate over all the rows, which are the inner arrays of the json array of arrays.
 				resultArray.forEach( function (arrayItem){		
 					lineNr++;
-					var rowValues = {};
-					rowValues.dataElement = arrayItem.dataElement;
-					rowValues.period = arrayItem.period;
-					rowValues.orgUnit = arrayItem.orgUnit;
-					rowValues.categoryOptionCombo = arrayItem.categoryOptionCombo;
-					rowValues.attributeOptionCombo = arrayItem.attributeOptionCombo;
-					rowValues.value = cleanValue(arrayItem.value, arrayItem.dataElement, lineNr);
-					rowValues.value = checkOptionSet(rowValues.value, arrayItem.dataElement, lineNr);
-					//abort if value indicates invalid option
-					if(rowValues.value === CODE_INVALID_VALUE)return -1;
-					rowValues.storedBy = arrayItem.storedBy;
-					rowValues.created = arrayItem.created;
-					rowValues.lastUpdated = arrayItem.lastUpdated;
-					rowValues.followUp = arrayItem.followUp;
-					data.dataValues.push(rowValues);
+					
+					//skip the first four lines which contain a header
+					if(lineNr>4){
+						var rowValues = {};						
+						for(var i = 0; i < numColumns; i++){
+							var columnLabel = "Column"+(i+1);
+							if(!isNullOrUndefinedOrEmptyString(arrayItem[columnLabel])){
+								rowValues.dataElement = dataElementIDArray[i];
+								rowValues.period = arrayItem.Column0;
+								rowValues.orgUnit = orgUnitID;
+								rowValues.categoryOptionCombo = optionIDArray[i];
+								rowValues.attributeOptionCombo = attributeOptionCombo;
+								rowValues.value = cleanValue(arrayItem[columnLabel], dataElementIDArray[i], lineNr);
+								rowValues.value = checkOptionSet(rowValues.value, dataElementIDArray[i], lineNr);
+								//abort if value indicates invalid option
+								if(rowValues.value === CODE_INVALID_VALUE)return -1;
+								rowValues.storedBy = userName;
+								rowValues.created = now;
+								rowValues.lastUpdated = now;
+								rowValues.followUp = false;
+								data.dataValues.push(rowValues);
+								processedDataEntries++;
+							}
+						}
+					}
 				});			
 				console.log(JSON.stringify(data))
-				add("Processed data elements: "+resultArray.length, 3);
+				add("Processed data values: " + processedDataEntries++, 3);
 				importDataFromDataSet(resultArray.length).then(resolve());
 			}
 	)	
