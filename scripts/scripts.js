@@ -1830,11 +1830,14 @@ function importDataFromDataSet(){
 					//number of successfully imported values
 					var ignored = res.importCount.ignored 
 					var imported = res.importCount.imported
+					var updated = res.importCount.updated
 					
 					if(isNullOrUndefined(res.conflicts)){
 						add("No problems found during test upload.",3)
-						if(ignored === 0){
+						if((ignored === 0)&&(imported+updated>0)){
 							add("No data elements were ignored in the dry run!", 3)
+							add(imported +" data elements will be imported.", 3)
+							add(updated +" data elements will be updated.", 3)
 							add("Now the real import of data starts!", 3)
 							
 							$.ajax({
@@ -1849,26 +1852,26 @@ function importDataFromDataSet(){
 								'Content-Type': 'application/json'
 							},
 							async: false
-						}).done(function(res) {
-							add("Successful data upload!",3);
-							onbeforeunload();
-							resolve("Successful data upload!");
-						})
-						.fail(function (request, textStatus, errorThrown) {
-							try
-							{			
-								add("The following request could not be processed:"+JSON.stringify(data), 4)
-							}
-							catch(ex)
-							{
-								add("Something went wrong while fetching event import error summary", 4);
-								add(ex, 4);
-								console.log(ex);
-								reject("Something went wrong while fetching event import error summary");
-							}			
-						})
+							}).done(function(res) {
+								add("Successful data upload!",3);
+								onbeforeunload();
+								resolve("Successful data upload!");
+							})
+							.fail(function (request, textStatus, errorThrown) {
+								try
+								{			
+									add("The following request could not be processed:"+JSON.stringify(data), 4)
+								}
+								catch(ex)
+								{
+									add("Something went wrong while fetching event import error summary", 4);
+									add(ex, 4);
+									console.log(ex);
+									reject("Something went wrong while fetching event import error summary");
+								}			
+							})
 						}else{
-							reject("Error: Only "+ ignored + " imports were successful!")
+							reject("Error: No data imports were successful!")
 						}
 					}else{
 						//print the error messages in the field "conflicts":
