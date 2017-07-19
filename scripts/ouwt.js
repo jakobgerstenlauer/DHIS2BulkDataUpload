@@ -114,20 +114,9 @@ function Selection()
     	org_unit_path=organisationUnits[org_unit_id].path;
     	$("#rightBar").hide();
     	getPolygon(org_unit_id,1);
-    	
-    	for(let org_unit_id of selected){
-    		//delete if unselected
-    		if(org_unit_ids.has(org_unit_id)){
-    			org_unit_ids.delete(org_unit_id);
-	    		orgUnitNames.delete(org_unit_id);
-    		}else{
-	    		org_unit_ids.add(org_unit_id);
-	    		orgUnitNames.set(org_unit_id,organisationUnits[org_unit_id].n);
-    		}
-    	}
     };
     
-    var multipleSelectionAllowed = true;
+    var multipleSelectionAllowed = false;
     var unselectAllowed = true;
     var rootUnselectAllowed = true;
     var autoSelectRoot = false;
