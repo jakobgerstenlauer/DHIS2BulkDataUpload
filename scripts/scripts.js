@@ -1169,7 +1169,7 @@ function clearDataElementAttributes(){
 
 
 /**
- * Reads label of data element i from /dataElements API.
+ * Reads label of data element i from dataElements API.
  * 
  * @param dataElementId This is the data element ID.
  * @param i
@@ -1811,6 +1811,7 @@ function importDataFromDataSet(){
 	return new Promise(
 			function (resolve, reject) {
 				var importStrategy = getImportStrategy();
+				console.log(JSON.stringify(data))
 				$.ajax({
 					method: "POST",
 					type: 'post',
@@ -2487,8 +2488,8 @@ function processDataset(){
 				resultArray.forEach( function (arrayItem){		
 					lineNr++;
 					
-					//skip the first four lines which contain a header
-					if(lineNr>4){
+					//skip the first four lines which contain a header (lineNr starts counting at 0!)
+					if(lineNr>3){
 						var rowValues = {};						
 						for(var i = 0; i < numColumns; i++){
 							var columnLabel = "Column"+(i+1);
