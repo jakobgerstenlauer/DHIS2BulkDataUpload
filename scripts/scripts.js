@@ -1324,14 +1324,14 @@ function getCurrentTime(){
 	//Format: "2017-07-04T12:35:37.554+0000"
 	var year = date.getFullYear();
 	//Returns the month (from 0-11)
-	var month = monthToString(1 + date.getUTCMonth());
+	var month = monthToString(1 + date.getMonth());
 	//Returns the day of the month, according to universal time (from 1-31)
-	var day = monthToString(date.getUTCDate());
-	var hour = monthToString(date.getUTCHours());
+	var day = monthToString(date.getDate());
+	var hour = monthToString(date.getHours());
 	//Returns the minutes (from 0-59)
-	var minutes = monthToString(date.getUTCMinutes());
-	var seconds = monthToString(date.getUTCSeconds());
-	var milliSeconds = date.getUTCMilliseconds();
+	var minutes = monthToString(date.getMinutes());
+	var seconds = monthToString(date.getSeconds());
+	var milliSeconds = date.getMilliseconds();
 	return year + "-" + month + "-" + day +"T" + hour + ":" + minutes + ":" + seconds + "." + milliSeconds + "+0000";
 }
 
@@ -2489,11 +2489,11 @@ function processDataset(){
 					lineNr++;
 					
 					//skip the first four lines which contain a header (lineNr starts counting at 0!)
-					if(lineNr>3){
-						var rowValues = {};						
+					if(lineNr>3){												
 						for(var i = 0; i < numColumns; i++){
 							var columnLabel = "Column"+(i+1);
 							if(!isNullOrUndefinedOrEmptyString(arrayItem[columnLabel])){
+								var rowValues = {};
 								rowValues.dataElement = dataElementIDArray[i];
 								rowValues.period = arrayItem.Column0;
 								rowValues.orgUnit = orgUnitID;
@@ -2517,8 +2517,8 @@ function processDataset(){
 					}
 				});			
 				console.log(JSON.stringify(data))
-				add("Processed data values: " + processedDataEntries++, 3);
-				importDataFromDataSet(resultArray.length).then(resolve());
+				add("Processed data values: " + processedDataEntries, 3);
+				importDataFromDataSet().then(resolve());
 			}
 	)	
 }
