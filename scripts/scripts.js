@@ -1367,8 +1367,11 @@ function getSpreadsheet(forDataSet) {
 		  console.log(key + ' = ' + value);
 	}
 	
+	//The first column is reserved for the period.
+	column_header[0] = "Column0";
+	
 	//Here we order the data elements according to the order of the sections of the program.
-	var i = 0; var j =0;
+	var i = 0; var j = 0;
 	for (var [key, value] of sectionDataElementMap.entries()) {
 		 var arrayOfDataElementIDs = value;		 
 		 console.log("dataElements: "+ arrayOfDataElementIDs.toString())
@@ -1398,7 +1401,7 @@ function getSpreadsheet(forDataSet) {
 		 				var section_label = getLabel(sectionDisplayNameMap, key, section_label_old);
 		 				section_label_old = section_label.old
 		 				section_header[j]= section_label.label
-		 				column_header[j] = "Column"+j;
+		 				column_header[j+1] = "Column"+(j+1);
 
 		 				var data_element_label = getLabel(dataElementsLabel, dataElement, data_element_label_old);
 		 				data_element_label_old = data_element_label.old
@@ -1410,7 +1413,7 @@ function getSpreadsheet(forDataSet) {
 					}
 		 		}else{
 		 			section_header[j]= sectionDisplayNameMap.get(key);
-		 			column_header[j] = "Column"+j;
+		 			column_header[j+1] = "Column"+(j+1);
 				 	data_element_header[j]= dataElementsLabel.get(dataElement);
 				 	option_header[j]="";
 		 			j++;
@@ -1505,7 +1508,7 @@ function getSpreadsheet(forDataSet) {
 				// {"dataElement":"r93CGkSemDg","period":"2016","orgUnit":"uZZhXR5xxmV","categoryOptionCombo":"rUqhQb4yK70","attributeOptionCombo":"WXQU0xM4tNh","value":"5","storedBy":"admin","created":"2017-07-04T12:35:37.554+0000","lastUpdated":"2017-07-04T12:35:37.554+0000","followUp":false}
 				// I prepend two additional columns with labels which have to be deleted before the upload:
 				[].concat.apply([],[column_header]),
-				[].concat.apply([],["Section", section_header]),
+				[].concat.apply([],["Section:", section_header]),
 				[].concat.apply([],["Data element:", data_element_header]),
 				[].concat.apply([],["Period|Option:", option_header])
 			];
@@ -1521,13 +1524,14 @@ function getSpreadsheet(forDataSet) {
 		var output_array_sheet_2 = [];
 		if(forDataSet){
 			output_array_sheet_2 = [
-			["The first row of spreadsheet 1 contains descriptive labels of all columns."],
-			[""],
+			["Rows 2,3,4 of data entry sheet 2 contain the section, data element, and data element option for all columns."],
+			["You can ignore row 1, which is only used for internal data processing during the data upload."],
+			["Additional information concerning the different data elements can be found here:"],
 			["data element ID:","Section:","Label:","Description:","","Compulsory?","Value type:","Option set Id:","Possible values:"]
 		];
 		}else{
 			output_array_sheet_2 = [
-				["The first row of spreadsheet 1 contains descriptive labels of all columns."],
+				["The first row of data entry sheet 2 contains descriptive labels of all columns."],
 				[""],
 				["Fixed column:"],
 				["Reporting Date","","","Enter the date time when the data was recorded in the following format: <2016-12-01T00:00:00.000> (first December 2016)."],
