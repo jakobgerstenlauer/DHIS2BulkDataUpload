@@ -399,7 +399,22 @@ function readProperties() {
 	localStorage.setItem("reloaded", false);
 	$.getJSON("manifest.webapp", function( json ) {
 		baseUrl = json.activities.dhis.href;
-		//TODO Update to new version when current DHIS version = 30!		
+		//TODO Update to new version when current DHIS version = 30!	
+		//TODO Check for each new version if the older API is still supported!
+		//Compare the following extract from the DHIS2 developer documentation: 
+		//https://docs.dhis2.org/master/en/developer/html/webapi_browsing_the_web_api.html#webapi_api_versions
+		//
+		//		1.6.3. Web API versions
+		//		The Web API is versioned starting from DHIS 2.25. The API versioning follows the DHIS 2 major version numbering. As an example, the API version for DHIS 2.25 is 25.
+		//		You can access a specific API version by including the version number after the /api component, as an example like this:
+		//		/api/26/dataElements
+		//		If you omit the version part of the URL, the system will use the current API version. 
+		//      As an example, for DHIS 2.25, when omitting the API part, the system will use API version 25. 
+		// 		When developing API clients it is recommended to use explicit API versions (rather than omitting the API version),
+		// 		as this will protect the client from unforeseen API changes.
+		//		The last three API versions will be supported. 
+		// 		As an example, DHIS version 2.27 will support API version 27, 26 and 25.
+		//		Note that the metadata model is not versioned, and that you might experience changes e.g. in associations between objects. These changes will be documented in the DHIS2 major version release notes.
 		apiBaseUrl = baseUrl + "/api/26";					
 	})
 	.done(function(){
