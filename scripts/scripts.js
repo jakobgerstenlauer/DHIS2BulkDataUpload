@@ -1410,6 +1410,7 @@ function getSpreadsheet(forDataSet) {
 					}
 		 		}else{
 		 			section_header[j]= sectionDisplayNameMap.get(key);
+		 			column_header[j] = "Column"+j;
 				 	data_element_header[j]= dataElementsLabel.get(dataElement);
 				 	option_header[j]="";
 		 			j++;
