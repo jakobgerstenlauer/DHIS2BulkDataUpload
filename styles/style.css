@@ -24,8 +24,13 @@ form {
 }
 */
 
+#select_if_data_set_or_program_form{
+	margin: 50px 0px 10px 250px;
+	padding: 10px;
+	flex-direction: row;
+}
+
 #download_form_data_sets{
-	margin: 50px 0px 0px 0px;
 	padding: 10px;
 	flex-direction: row;
 }

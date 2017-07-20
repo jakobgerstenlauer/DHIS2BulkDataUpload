@@ -6,8 +6,7 @@
 		
         <!-- Stylesheets related to the menu 
 			Path to the css files:  ../../../dhis-web-commons/font-awesome/css/
-		-->
-		
+		-->		
 	    <link type="text/css" rel="stylesheet" href="../../../dhis-web-commons/font-awesome/css/font-awesome.min.css"/>
 		<link type="text/css" rel="stylesheet" media="screen" href="../../../dhis-web-commons/css/menu.css">
 		<link type="text/css" rel="stylesheet" href="./styles/style.css">
@@ -99,8 +98,7 @@
 
 	</head>
 
-	<body>
-	
+	<body>	
 		<header class="header">
 				<!-- Actual menu (from id) -->
 				<div id="dhisDropDownMenu">
@@ -114,20 +112,29 @@
 					>					
 				</div>	
 				
+				<!-- Select if data is uploaded to data sets or programs -->
+				<div id="select_if_data_set_or_program" >
+					<select id="select_if_data_set_or_program_form" title="Please select if data is uploaded to a dataset or a program."
+					onchange="showHideDatasets()">
+					    <option value=1> Dataset </option>
+						<option value=2> Program </option>
+					</select>
+				</div>			
+				
 				<!-- List of available data sets -->
-				<div id="template_button_list_data_sets">
+				<div id="template_button_list_data_sets" hidden=true >
 					<form id="download_form_data_sets">
-					<select id="dataSetList" title="Please select a dataset." onchange="queryDataSet()">
+					<select id="dataSetList" title="Please select a dataset." onchange="hideSelectButton('ListOfDataSetOptions'); queryDataSet()">
 					</select>
-					<select id="ListOfDataSetOptions" title="Please select the type of data you want to enter.">
+					<select id="ListOfDataSetOptions" title="Please select the type of data you want to enter." hidden=true>
 					</select>							
-					<select id="periodYear" title="Please select a year." hidden=true >
+					<select id="periodYear" title="Choose a year to create an example period." hidden=true >
 					</select>
-					<select id="periodMonth" title="Please select a month." hidden=true>
+					<select id="periodMonth" title="Choose a month to create an example period." hidden=true>
 					</select>					
-					<select id="periodWeek" title="Please select a calendar week." hidden=true>
+					<select id="periodWeek" title="Choose a calendar week to create an example period." hidden=true>
 					</select>					
-					<select id="periodDay" title="Please select a day of month." hidden=true>
+					<select id="periodDay" title="Choose a day of month to create an example period." hidden=true>
 					</select>	
 					<!-- Get Spreadsheet button.
 					This button is hidden. It only appears when all necessary information was entered by the user
@@ -137,7 +144,7 @@
 				</div>			
 				
 				<!-- List of available programs -->
-				<div id="template_button_list">
+				<div id="template_button_list" hidden=true>
 					<form id="download_form">				
 					<select id="programList" title="Please select a program." onchange="queryProgramStageApi()">
 					</select>
@@ -153,7 +160,7 @@
 				</div>				
 		</header>
 			
-		<div class="flex-container">
+		<div class="flex-container" id="container">
 		
 			<div class="flex-item">
 	  			<!-- Tree (library uses the treeSelectedId or selectionTree idk) -->
@@ -182,13 +189,13 @@
 					<input  disabled type="file" title="Please choose the file you want to upload." id="uploadSpreadsheet"  name="files[]" multiple />         			
 					<button title="Start the upload of your data." id="testUpload">Upload </button> 
 					<div>
-						<select id="CheckGeoLocation" title="Choose if geolocation data should be processed and validated when uploading your spreadsheet.">
+						<select id="CheckGeoLocation" hidden=true title="Choose if geolocation data should be processed and validated when uploading your spreadsheet.">
 						<option value=1> Latitude and longitude are provided. </option>
 						<option value=2 selected="selected"> No geolocation. </option>
 						</select>
 					</div>
 					<div>
-						<select id="ChooseImportStrategy" 
+						<select id="ChooseImportStrategy" hidden=true 
 						title="Choose the import strategy for data sets.">
 						<option value=1 title="Create new values."> CREATE </option>
 						<option value=2 title="Update existing values." > UPDATE </option>

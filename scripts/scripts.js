@@ -536,6 +536,7 @@ function clearDataSetSelectButtons(){
 	$("#getSpreadsheetDataSet").prop("hidden",true);
 	$("#uploadSpreadsheet").prop("disabled",true);
 	clearSelectButton("ListOfDataSetOptions");	
+	hideSelectButton("ListOfDataSetOptions");
 }
 
 /**
@@ -543,7 +544,7 @@ function clearDataSetSelectButtons(){
  * @returns
  */
 function queryDataSet() {
-	
+	dataSetOptions = 0;
 	clearDataElementAttributes();
 	
 	//Make the get spreadsheet button invisible.
@@ -575,8 +576,11 @@ function queryDataSet() {
 			queryDataSetSections(val.id);
 		})
 	}).done(function(){
-		if(dataSetOptions==dataSetOptionMap.size){
+		if((dataSetOptions==dataSetOptionMap.size)&&(dataSetOptions>1)){			
 			tryToCreateDataSetOptionsDropDown();
+			showSelectButton("ListOfDataSetOptions")			
+		}else{
+			hideSelectButton("ListOfDataSetOptions");
 		}
 	})
   
@@ -598,8 +602,8 @@ function queryDataSet() {
 function queryCategoryCombo(categoryComboId, forDataSet) {
 	//Retrieve the data elements of this data set.
 	$.getJSON(apiBaseUrl+"/categoryCombos/"+categoryComboId+".json?paging=false&fields=categoryOptionCombos", 
-	function (json) {
-		dataSetOptions=json.categoryOptionCombos.length;
+	function (json) { 
+		if(forDataSet) dataSetOptions=json.categoryOptionCombos.length;
 		//an array of category option combos
 		var categoryOptions = [];
 		$.each(json.categoryOptionCombos, function( key, val ) {
@@ -625,7 +629,17 @@ function queryCategoryOptionCombo(categoryOptionComboId, dataSet) {
 			}else{
 				comboLabelMap.set(categoryOptionComboId, json.displayName);
 			}
-	    }).done(function(){if(dataSet)tryToCreateDataSetOptionsDropDown();})
+	    }).done(function(){
+	    	
+	    	if(dataSet){
+		    	if((dataSetOptions==dataSetOptionMap.size)&&(dataSetOptions>1)){			
+					tryToCreateDataSetOptionsDropDown();
+					showSelectButton("ListOfDataSetOptions")			
+				}else{
+					hideSelectButton("ListOfDataSetOptions");
+				}
+	    	}
+	    })
 }
 
 /**
@@ -688,6 +702,7 @@ function createDataSetDropDown() {
 function tryToCreateDataSetOptionsDropDown(){
 	var sel = document.getElementById('ListOfDataSetOptions');
 	var length = sel.options.length;
+	if(length>1) showSelectButton("ListOfDataSetOptions")
 	for (i = 0; i < length; i++) {
 	  sel.options[i] = null;
 	}
@@ -707,6 +722,7 @@ function tryToCreateDataSetOptionsDropDown(){
  * program options which depend on the user.
  */
 function createDataSetOptionsDropDown() {	
+	    if(dataSetOptionMap.size<=1) return;
 		if(document.getElementById('ListOfDataSetOptions')){
 				clearSelectButton('ListOfDataSetOptions');
 				var sel = document.getElementById('ListOfDataSetOptions');
@@ -1525,7 +1541,8 @@ function getSpreadsheet(forDataSet) {
 				[].concat.apply([],[column_header]),
 				[].concat.apply([],["Section:", section_header]),
 				[].concat.apply([],["Data element:", data_element_header]),
-				[].concat.apply([],["Period|Option:", option_header])
+				[].concat.apply([],["Period|Option:", option_header]),
+				[].concat.apply([],[getPeriod()])
 			];
 		}else{
 			output_array_sheet_1 = [
@@ -2819,6 +2836,34 @@ function s2ab(s) {
 	var view = new Uint8Array(buf);
 	for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
 	return buf;
+}
+
+function showHideDatasets(){
+	//clearDataSetSelectButtons();
+	switch(parseInt(getSelectValue("select_if_data_set_or_program_form"))){
+	//datasets
+	case 1:
+		console.log("Activate dataset mode!");
+		hideSelectButton("template_button_list");
+		hideSelectButton("ListOfDataSetOptions")
+		hideSelectButton("periodYear");
+		hideSelectButton("periodMonth");
+		hideSelectButton("periodWeek");
+		hideSelectButton("periodDay");
+		hideSelectButton("CheckGeoLocation");
+		showSelectButton("ChooseImportStrategy");
+		showSelectButton("template_button_list_data_sets");
+		break;
+	//programs
+	case 2:
+		console.log("Activate program mode!")
+		hideSelectButton("ChooseImportStrategy");
+		hideSelectButton("template_button_list_data_sets");
+		showSelectButton("CheckGeoLocation");
+		showSelectButton("template_button_list");
+		break;
+	default: console.log("Invalid option: "+ parseInt(getSelectValue("select_if_data_set_or_program_form")))
+	}
 }
 
 //JQuery syntax for: wait until the html document has been loaded,
