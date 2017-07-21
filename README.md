@@ -68,13 +68,23 @@ Note that the upload may take some time.
 |dataValueSets|"/dataValueSets?dryRun=false&importStrategy=""+importStrategy"|importDataFromDataSet()|Upload data for data sets |
 |events|/events?dryRun=true|importData()|Upload data for programs|
 |events|/events?dryRun=false|importData()|Upload data for programs dry run|
-	
-### Updated DHIS Version:
+
+### Dependencies and Maintainability
+This app was developed for DHIS version 2.26. There are more than 20 different calls to the DHIS2 web API (see table above). 
+According to the DHIS2 developer documentation: 
+``The last three API versions will be supported. As an example, DHIS version 2.27 will support API version 27, 26 and 25. 
+Note that the metadata model is not versioned, and that you might experience changes e.g. in associations between objects. 
+These changes will be documented in the DHIS2 major version release notes.'' 
+As recommendend, I used a global variable ``baseUrl'' which includes the version number (currently 26) in the API call. 
+In theory, the API calls should be supported in DHIS2 versions 27,28, and 29. 
+However, we recently experienced problems when switching to version 27: 
+The programStageDataElements endpoint completely disappeared in the new version (2.27) and support for older version was discontinued at the same time (compare my bug report with reference DHIS2-1939: https://jira.dhis2.org/browse/DHIS2-1939 ). 
+This indicates that changes to the DHIS2 web API have to be monitored closely before switching to a new version.	
 If the DHIS Version is updated, the following maintenance steps have to be carried out:
-1) Update of ouwt.js: Get the latest version of this script
-and copy getPolygon() in line 81 and the listenerFunction() in line 101 
-from the old to the new version.
-2) Update of scripts.js: Update the path to the event API in line 557 (marked with //TODO).
+1) Check if there are changes in the web API that affect the application.
+2) If there are relevant changes adapt the API calls.
+3) Update the *baseUrl* variable (marked with //TODO) in scripts.js and switch to the new version.
+In theory there should be no need to adapt the app during three consequent version updates, but it is recommendable to keep adapting the app to changes in the web API.
 			
 ### Installation: 
 This app is installed throught the DHIS2 menu normally.
