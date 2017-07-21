@@ -42,6 +42,30 @@ Note that the upload may take some time.
 - tableStyles:		Common file with the styles of the main table
 - treeStyles:		Common file with the styles used on the orgUnit tree
 	
+###Overview of API Calls
+|API|API Call|JavaScript function|Purpose|
+|-----|-----------------------------------|-----------|-----------------------------------|
+|me|me.json?paging=FALSE&fields=userCredentials,displayName|queryUserRoles()|Retrieve the ID of the user to then query the userRoles API.|
+|userRoles|"userRoles/""+roleId+"".json?paging=FALSE&fields=programs,dataSets"|queryUserRoles()|Retrieve the datasets and programs the user is authorized for.|
+|dataSets|/dataSets.json?paging=false&field=dataSets|queryDataSetsApi()|We want to get a list of all datasets (ID and display name) the user is authorized to edit. Based on this information a drop down list is populated.|
+|dataSets|"/dataSets/""+dataSet_id+"".json?paging=false&fields=dataSetElements,sections,periodType,categoryCombo"|queryDataSet()|Retrieve the data elements, sections, and categorycombos of this data set.|
+|categoryCombos|"/categoryCombos/""+categoryComboId+"".json?paging=false&fields=categoryOptionCombos"|queryCategoryCombo()|Queries category option combinations for individual data elements or for the data set as a whole.|
+|categoryOptionCombos|"categoryOptionCombos/""+categoryOptionComboId+"".json?paging=false&fields=displayName"|queryCategoryOptionCombo()|Queries ID and display name for a given category option combination.|
+|programs|/programs.json?fields=id,displayName,programStages,categoryCombo&filter=attributeValues.attribute.name:eq:WISCC|queryProgramsApi()|Query program names, IDs, and category combinations. We also want to get a list of “program stages” which we can use to query the program stages api in the next step.|
+|categoryCombos|"/categoryCombos/""+idCategoryCombo+"".json?fields=categories"|queryCategoryCombosApi()|Nested calls to three APIs in order to retrieve the name and id of NGOs associted to a program for non-official organisations.|
+|categories|"/categories/""+val.id+"".json?fields=categoryOptions"|queryCategoryCombosApi()|Nested calls to three APIs in order to retrieve the name and id of NGOs associted to a program for non-official organisations.|
+|categoryOptions|"/categoryOptions/""+idCategoryOptionCombo+"".json?fields=id,shortName"|queryCategoryOptionCombos()|Nested calls to three APIs in order to retrieve the name and id of NGOs associted to a program for non-official organisations.|
+|programStages|"/programStages/""+ program_stage_id +"".json?&paging=false&fields=programStageDataElements,programStageSections"|retrieveProgramStageDataElements()|Retrieves data elements of program stage endpoint.|
+|programStageSections|"/programStageSections/""+ sectionId +"".json?&paging=false&fields=programStageDataElements,displayName"|queryProgramStageSectionsInnerCall()|Retrieve the data elements associated to each program stage section.|
+|sections|"/sections/""+ sectionId +"".json?&paging=false&fields=dataElements,displayName"|queryDataSetSections()|Retrieves the data elements (ID and display name) associated to a data set section.|
+|programStageDataElements|"/programStageDataElements/""+ dataElement +"".json?&paging=false&fields=dataElement,compulsory"|queryProgramStageDataElementsInnerCall()|Retrieves Id, label, and compulsory property associated to a data element from the program stage data element endpoint.|
+|dataElements|"/dataElements/""+ dataElementId +"".json?&paging=false&fields=formName,valueType,description,optionSetValue,optionSet"|queryDataElement()|Reads label, value type, description, and hasOptionSet property of a given data element from the dataElements API.|
+|optionSets|"/optionSets/""+ optionSetId +"".json?&paging=false&fields=options"|queryOptionsInnerCall()|Read option IDs for given option set.|
+|options|"/options/""+ optionId +"".json?&paging=false&fields=displayName"|queryOption()|Retrieves the text value for a given option ID.|
+|dataValueSets|"/dataValueSets?dryRun=true&importStrategy=""+importStrategy"|importDataFromDataSet()|Upload data for data sets dry run|
+|dataValueSets|"/dataValueSets?dryRun=false&importStrategy=""+importStrategy"|importDataFromDataSet()|Upload data for data sets |
+|events|/events?dryRun=true|importData()|Upload data for programs|
+|events|/events?dryRun=false|importData()|Upload data for programs dry run|
 	
 ### Updated DHIS Version:
 If the DHIS Version is updated, the following maintenance steps have to be carried out:
