@@ -44,6 +44,7 @@ Note that the upload may take some time.
 	
 ### Overview of API Calls
 
+
 |API|API Call|JavaScript function|Purpose|
 |-----|-----------------------------------|-----------|-----------------------------------|
 |me|me.json?paging=FALSE&fields=userCredentials,displayName|queryUserRoles()|Retrieve the ID of the user to then query the userRoles API.|
