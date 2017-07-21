@@ -442,7 +442,7 @@ function queryUserRoles() {
 			$.getJSON(apiBaseUrl+"/userRoles/"+roleId+".json?paging=FALSE&fields=programs,dataSets", 
 			function (json) {      		
 				$.each( json.programs, function( key, val ) {
-					userPrograms.add(val.id);										
+					userPrograms.add(val.id);				Retrieve 						
 				})
 				$.each( json.dataSets, function( key, val ) {
 					userDataSets.add(val.id);	
@@ -460,7 +460,8 @@ function queryUserRoles() {
  *  Queries dataSets API.
  *  Here it is assumed that the path of the properties file and the script file are identical! 
  *  In the first step, we query the dataSets endpoint: /api/dataSets.json
- *  We want to get a list of data elements contained in the data set.
+ *  We want to get a list of all datasets the user is authorized to edit.
+ *  
  */
 function queryDataSetsApi() {
 	
@@ -618,6 +619,7 @@ function queryCategoryCombo(categoryComboId, forDataSet) {
 }
 
 /**
+ * Queries ID and display name for a given category option combination.
  * CategoryCombos:
 	http://who-dev.essi.upc.edu:8086/api/categoryCombos
  */
@@ -961,7 +963,7 @@ function queryProgramStageApi() {
 }
 
 /**
- * Nested calls to three different APIs in order to retrieve the name and id of NGOs.
+ * Nested calls to three APIs in order to retrieve the name and id of NGOs associted to a program for non-official organisations.
  * 
  * Queries first the /categoryCombos API and second the /categories API.
  * Calls queryCategoryOptionCombos() with the id of the retrieved category.
@@ -1000,7 +1002,7 @@ function queryCategoryCombosApi(idCategoryCombo) {
 									opt.innerHTML = orgUnit;
 									sel.appendChild(opt);
 									counterNGOs++;
-									//once all NGOs have been retrieved.
+									//activate the getSpreadsheet button, once all NGOs have been retrieved.
 									if(counterNGOs===totalNumNGOs){
 										document.getElementById("getSpreadsheet").onclick = function fun() {
 									        console.log("Activated getSpreadsheet button!");
@@ -1024,7 +1026,7 @@ function queryCategoryCombosApi(idCategoryCombo) {
 }
 
 /**
- * Queries /categoryOptions API in order to retrieve the name and id of NGOs.
+ * Queries the categoryOptions API in order to retrieve the name and id of NGOs.
  * 
  * @param idCategoryOptionCombo
  * @returns
@@ -1113,6 +1115,12 @@ $.getJSON(apiBaseUrl+"/programStageSections/"+ sectionId +".json?&paging=false&"
 		});
 }
 
+/**
+ * Retrieves the data elements associated to a data set section.
+ * 
+ * @param sectionId
+ * @returns
+ */
 function queryDataSetSections(sectionId){
 $.getJSON(apiBaseUrl+"/sections/"+ sectionId +".json?&paging=false&"+
 		"fields=dataElements,displayName", function (json) {	
@@ -1185,10 +1193,9 @@ function clearDataElementAttributes(){
 
 
 /**
- * Reads label of data element i from dataElements API.
+ * Reads label, value type, description, and hasOptionSet property of a given data element from the dataElements API.
  * 
  * @param dataElementId This is the data element ID.
- * @param i
  * @returns
  */
 function queryDataElement(dataElementId) {	
@@ -1289,6 +1296,12 @@ function queryOption(optionId) {
 	});
 }
 
+/**
+ * Creates a range of integers from lowEnd to highEnd.
+ * @param lowEnd
+ * @param highEnd
+ * @returns
+ */
 function range(lowEnd, highEnd) {
 	var arr = [],
 	c = highEnd - lowEnd + 1;
