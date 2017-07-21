@@ -442,7 +442,7 @@ function queryUserRoles() {
 			$.getJSON(apiBaseUrl+"/userRoles/"+roleId+".json?paging=FALSE&fields=programs,dataSets", 
 			function (json) {      		
 				$.each( json.programs, function( key, val ) {
-					userPrograms.add(val.id);				Retrieve 						
+					userPrograms.add(val.id);									
 				})
 				$.each( json.dataSets, function( key, val ) {
 					userDataSets.add(val.id);	
@@ -1371,17 +1371,19 @@ function getCurrentTime(){
  * @param map The map from which the new label is retrieved.
  * @param key The key for retrieving the label from the map.
  * @param old The old value of the label.
+ * @param repeat Should the same label be repeated?
  * @returns A new JavaScript object with two slots.
  */
-function getLabel(map, key, old){
+function getLabel(map, key, old, repeat){
 	var label = map.get(key);
 	if(label === old){
-		label=""
+		if(!repeat)label=""
 	}else{
 		old = label;
 	}
 	return {label, old};
 }
+
 
 /**
  * Generates a new template spreadsheet.
@@ -1442,12 +1444,13 @@ function getSpreadsheet(forDataSet) {
 			 		var options = comboOptionMap.get(categoryComboID);
 			 		for (let option of options){
 			 			
-		 				var section_label = getLabel(sectionDisplayNameMap, key, section_label_old);
+		 				var section_label = getLabel(sectionDisplayNameMap, key, section_label_old, false);
 		 				section_label_old = section_label.old
 		 				section_header[j]= section_label.label
 		 				column_header[j+1] = "Column"+(j+1);
 
-		 				var data_element_label = getLabel(dataElementsLabel, dataElement, data_element_label_old);
+		 				//If you want to omit repeating the data element label, replace the last argument by a "false".
+		 				var data_element_label = getLabel(dataElementsLabel, dataElement, data_element_label_old, true);
 		 				data_element_label_old = data_element_label.old
 		 				data_element_header[j]= data_element_label.label
 		 				dataElementOptionArray[j] = dataElement + "#" + option;
@@ -1554,8 +1557,7 @@ function getSpreadsheet(forDataSet) {
 				[].concat.apply([],[column_header]),
 				[].concat.apply([],["Section:", section_header]),
 				[].concat.apply([],["Data element:", data_element_header]),
-				[].concat.apply([],["Period|Option:", option_header]),
-				[].concat.apply([],[getPeriod()])
+				[].concat.apply([],["Period (e.g.:"+getPeriod()+")|Option:", option_header])
 			];
 		}else{
 			output_array_sheet_1 = [
