@@ -2476,12 +2476,29 @@ function processProgramData(){
 }
 
 /**
- *Process and upload data for data sets to DHIS2 Api
+ *Process and upload data for data sets to the DHIS2 Api
+ *
+ *The number of columns with data entries is determined by reading the metadatasheet:
+ *Starting in column nr. 6 ("F"), the first row contains a label "dataElementOptionNr"+i,
+ *and row 2 contains the ID of the data element and the ID of the option separated by a hash ("#").
+ *After reading this metadata from the metadata sheet, the unction reads the input data from the second sheet starting in row 5.
+ *The mapping between data entries (identified by the combination of a data element ID and a option ID)
+ *and the columns in the data input sheet is done in the following way:
+ *The arrays dataElementIDArray[] and optionIDArray[] store the data element ID and option ID for all data entries i from 0 to numColumns -1.
+ *The respective data entries in the input data spreadsheet are ordered accordingly 
+ *and the headers of the template sheet contain the string "Column"+(i+1).
+ *Now it is easy to construct the string in a loop over all data entries and use this string to retrieve the value as: arrayItem[columnLabel].
+ *The raw value is then cleaned and validated using the functions cleanValue() and checkOptionSet().
+ *The json object for the API call to upload the data is appended line for line, with each line describing one individual data entry.
+ *Each line has the following structure:
+ *
  *{"dataValues":[
  *{"dataElement":"r93CGkSemDg","period":"2016","orgUnit":"uZZhXR5xxmV","categoryOptionCombo":"rUqhQb4yK70","attributeOptionCombo":"WXQU0xM4tNh","value":"5","storedBy":"admin","created":"2017-07-04T12:35:37.554+0000","lastUpdated":"2017-07-04T12:35:37.554+0000","followUp":false}
  *]}
  *
- * @returns
+ *The data upload is initiated with a call to importDataFromDataSet().
+ *
+ *@returns No return value.
  */
 function processDataset(){
 	return new Promise(
@@ -2495,8 +2512,10 @@ function processDataset(){
 				var metaData = metaDataArray[0];
 				var orgUnitID = metaData.OrgUnitId;
 				var attributeOptionCombo = metaData.DataSetCategoryOptionCombo;
+				
 				//number of data entries
 				var numColumns = 0;
+				//set a maximum possible number of data entries per row
 				var MAX_DATA_ENTRIES_PER_ROW = 1000;
 				var dataElementIDArray = new Array(MAX_DATA_ENTRIES_PER_ROW);
 				var optionIDArray = new Array(MAX_DATA_ENTRIES_PER_ROW);
@@ -2615,6 +2634,7 @@ function cleanValue(rawData, dataElement, lineNr){
 
 /**
  * Checks if the value is within the set of feasible options for this data element.
+ * 
  * @param rawData This is the string describing the data value.
  * @param dataElement This is the data element ID.
  * @returns The cleaned data value.
@@ -2702,7 +2722,8 @@ function checkOptionSet(rawData, dataElement, lineNr){
 }
 
 /**
- * Function checks if a given point is inside a polygon.
+ * Checks if a given point is inside a polygon.
+ * 
  * Sources:
  * https://github.com/substack/point-in-polygon
  * http://stackoverflow.com/questions/22521982/js-check-if-point-inside-a-polygon
@@ -2734,6 +2755,7 @@ function inside(point, vs) {
 
 /**
  * Is the point within any of the polygons?
+ * 
  * "Polygons" may consist of several disjunct areas.
  * This function is a wrapper for the inside() function, 
  * calling it for each inner array decribing a polygon.
@@ -2765,10 +2787,11 @@ function insideAnyPolygon(point, vs) {
 }
 
 /**
+ * Return the letter of the last column for each spreadsheet.
  * 
  * Here, I have to define which is the last valid column for each spreadsheet
- * The second sheet contains the data, here the nr of columns is always 4 + nr of data elements.
- * This function has to be udpated whenever the column layout of the template changes. 
+ * The second sheet contains the data, here the number of columns is always 4 + number of data elements.
+ * This function has to be updated whenever the column layout of the template changes. 
 **/
 function getSheetEndColumn() {
 	
@@ -2799,6 +2822,8 @@ function getSheetEndColumn() {
  
 /**
  * Converts an array of arrays into a spreadsheet.
+ * 
+ * Source: sheet JS
  * 
  * @param data The json array. 
  * @returns
@@ -2853,8 +2878,12 @@ function s2ab(s) {
 	return buf;
 }
 
+/**
+ * Hides and shows html elements depending on the type of data upload: programs or data sets.
+ * 
+ * @returns
+ */
 function showHideDatasets(){
-	//clearDataSetSelectButtons();
 	switch(parseInt(getSelectValue("select_if_data_set_or_program_form"))){
 	//datasets
 	case 1:
@@ -2881,6 +2910,7 @@ function showHideDatasets(){
 	}
 }
 
-//JQuery syntax for: wait until the html document has been loaded,
+//JQuery syntax: 
+//wait until the html document has been loaded,
 //then run the function readProperties(). 
 $(document).ready(readProperties());
