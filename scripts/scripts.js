@@ -129,10 +129,7 @@ var programsIDtoSTAGE = new Map();
 //Map used to go from name of non-official org to id
 var nonOffOrgNametoID = new Map();
 
-//program stage data elements
-var dataElements = new Array();
-
-//Id of program stage data elements
+//Ids of data elements
 var dataElementIDs = new Set();
 
 //IDs of program stage sections
@@ -1062,18 +1059,22 @@ function retrieveProgramStageDataElements(program_stage_id){
 						"fields=programStageDataElements,programStageSections", function (json) 
 						{
 							$.each( json.programStageDataElements, function( key, val ) {
-								dataElements[key] = val.id;
+								var dataElementID = val.dataElement.id;
+								dataElementIDs.add(dataElementID);
+								programStageDataElementMap.set(program_stage_id, dataElementID);
+								queryDataElement(dataElementID);
 							});
 							$.each( json.programStageSections, function( key, val ) {
 								programStageSectionID[key] = val.id;
 							});	
-						}).done(function() {	
-							queryProgramStageDataElements();
+						}).done(function() {
 							queryProgramStageSections();
-						}).done(function() {	
+						}).done(function() {
+							if(programListCreated===0){
+								createDropDown();
+							}
 							resolve(1);
 						});
-
 			});
 }
 
@@ -1141,34 +1142,14 @@ $.getJSON(apiBaseUrl+"/sections/"+ sectionId +".json?&paging=false&"+
 }
 
 /**
- * Query the program stage endpoint for all program stage data elements (elements of the array dataElements).
- * @return No return value.
- */
-function queryProgramStageDataElements() {
-	for (var i = 0; i< dataElements.length; i++){
-		queryProgramStageDataElementsInnerCall(dataElements[i]);
-	};
-	if(programListCreated===0){
-		createDropDown();
-	}
-}
-
-/**
- * Reads Id and label of data element of program stage data element with index i 
- * from /programStageDataElements API.
+ * Queries a certain data element from the /ataElements API.
  * 
  * @param dataElement An array with program stage data element Ids.
  * @param i Index of array dataElement. 
  * @returns
  */
 function queryProgramStageDataElementsInnerCall(dataElement){
-$.getJSON(apiBaseUrl+"/programStageDataElements/"+ dataElement +".json?&paging=false&"+
-		"fields=dataElement,compulsory", function (json) {
-	        programStageDataElementMap.set(dataElement,json.dataElement.id);
-			dataElementIDs.add(json.dataElement.id);
-			dataElementsCompulsory.set(dataElement,json.compulsory);
-			queryDataElement(json.dataElement.id);
-		});
+	       
 }
 
 /**
