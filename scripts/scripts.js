@@ -142,7 +142,7 @@ var sectionDisplayNameMap = new Map();
 
 //Association between sections and program stage data elements
 //key: section ID
-//value: array of program stage data element IDs
+//value: array of data element IDs (before version 27 this was an array of programStageDataElementIDs)
 var sectionDataElementMap = new Map();
 
 //This Map is necessary to translate from program stage data element ID to the data element ID:
@@ -1100,11 +1100,11 @@ function queryProgramStageSections() {
  */
 function queryProgramStageSectionsInnerCall(sectionId){
 $.getJSON(apiBaseUrl+"/programStageSections/"+ sectionId +".json?&paging=false&"+
-		"fields=programStageDataElements,displayName", function (json) {	
+		"fields=dataElements,displayName", function (json) {	
 			console.log(json);
-			//program stage data element ids
+			//data element ids
 	        var arrayOfDataElementIDs = []; 	        
-	        $.each( json.programStageDataElements, function( key, val ) {
+	        $.each( json.dataElements, function( key, val ) {
 	        	arrayOfDataElementIDs.push(val.id);
 			});	
 	        
@@ -1127,7 +1127,7 @@ $.getJSON(apiBaseUrl+"/sections/"+ sectionId +".json?&paging=false&"+
 		"fields=dataElements,displayName", function (json) {	
 			console.log(json);
 			
-			//program stage data element ids
+			//data element ids
 	        var arrayOfDataElementIDs = []; 	        
 	        $.each( json.dataElements, function( key, val ) {
 	        	arrayOfDataElementIDs.push(val.id);
@@ -1406,13 +1406,11 @@ function getSpreadsheet(forDataSet) {
 		 for(let dataElementId of arrayOfDataElementIDs){	
 			var data_element_label_old= "";
 			dataElementsSectionLabel_Array[i]= sectionDisplayNameMap.get(key);
-		 	var dataElement;
-		 	if(forDataSet){
-		 		dataElement = dataElementId;
-		 	}else{
-		 		//Translate from the program stage data element ID to the data element ID, if we are working with programs:
-		 		dataElement = programStageDataElementMap.get(dataElementId);
-		 	}
+			//Translate from the program stage data element ID to the data element ID, if we are working with programs:
+	 		//dataElement = programStageDataElementMap.get(dataElementId);
+	 		//Starting with version 27 this translation is not necessary any more.
+		 	var dataElement = dataElementId;
+		 
 		 	if(forDataSet){
 		 		console.log("i: "+i+" program stage data element: "+dataElementId+" dataElement: "+dataElement+" label: "+ dataElementsLabel.get(dataElement)+" description:"+dataElementsDescription.get(dataElement))
 			    		 		
@@ -1422,8 +1420,7 @@ function getSpreadsheet(forDataSet) {
 			 		// First, get the category combination:
 			 		var categoryComboID = dataElementIDsCategoryComboIDMap.get(dataElement);
 			 		// Then, get the set of options for this category combination:
-			 		var options = comboOptionMap.get(categoryComboID);
-			 		for (let option of options){
+			 		for (let option of comboOptionMap.get(categoryComboID)){
 			 			
 		 				var section_label = getLabel(sectionDisplayNameMap, key, section_label_old, false);
 		 				section_label_old = section_label.old
