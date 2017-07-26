@@ -3,7 +3,7 @@ var baseUrl;
 var apiBaseUrl;
 
 //Do we import data rows if there are missing values?
-var noMissingValuesAllowed = false;
+var noMissingValuesAllowed = false
 
 function genCharArray(charA, charZ) {
     var a = [], i = charA.charCodeAt(0), j = charZ.charCodeAt(0);
@@ -412,7 +412,7 @@ function readProperties() {
 		//		The last three API versions will be supported. 
 		// 		As an example, DHIS version 2.27 will support API version 27, 26 and 25.
 		//		Note that the metadata model is not versioned, and that you might experience changes e.g. in associations between objects. These changes will be documented in the DHIS2 major version release notes.
-		apiBaseUrl = baseUrl + "/api/26";					
+		apiBaseUrl = baseUrl + "/api/27";					
 	})
 	.done(function(){
 		queryUserRoles();
@@ -806,7 +806,7 @@ function tryToCreateDropDown(){
  * Sleep for a certain time.
  * 
  * @param Time in milliseconds
- * TODO: This function is not supported by Internet Explorer 11.576 
+ * This function is not supported by Internet Explorer 11.576 
  */
 function sleep (time) {
   return new Promise((resolve) => setTimeout(resolve, time));
@@ -1871,7 +1871,7 @@ function importDataFromDataSet(){
 							.fail(function (request, textStatus, errorThrown) {
 								try
 								{			
-									add("The following request could not be processed:"+JSON.stringify(data), 4)
+									add("The following request could not be processed in the real data upload (dryRun = false):"+JSON.stringify(data), 4)
 								}
 								catch(ex)
 								{
@@ -1895,7 +1895,7 @@ function importDataFromDataSet(){
 				.fail(function (request, textStatus, errorThrown) {
 					try
 					{			
-						add("The following request could not be processed:"+JSON.stringify(data), 4)
+						add("The request could not be processed during the dry run:"+JSON.stringify(data), 4)
 					}
 					catch(ex)
 					{
@@ -2033,7 +2033,7 @@ function importData(){
 				.fail(function (request, textStatus, errorThrown) {
 					try
 					{			
-						add("The following request could not be processed:"+JSON.stringify(eventDataValues), 4)
+						add("The following request could not be processed in dryRun:"+JSON.stringify(eventDataValues), 4)
 						add("Event data import response:", 3);
 						if(isNullOrUndefined(request)){
 							if(isNullOrUndefined(errorThrown)){
@@ -2538,7 +2538,7 @@ function processDataset(){
 								rowValues.storedBy = userName;
 								rowValues.created = now;
 								rowValues.lastUpdated = now;
-								rowValues.followUp = false;
+								rowValues.followUp = true;
 								data.dataValues.push(rowValues);
 								processedDataEntries++;
 							}
@@ -2684,7 +2684,13 @@ function checkOptionSet(rawData, dataElement, lineNr){
 			}
 			if(valueInOptionSet == false){
 				add("Row: "+lineNr+"->Invalid value \""+rawData+"\" for option set: "+optionSetId, 4);
-				rejected=true;		
+				add("Available options are: ", 4);
+				for (var i = 0; i < optionSet.length; i++) {
+					if(options.has(optionSet[i])){
+						add(" Option "+i+" : "+ options.get(optionSet[i]), 4);
+					}
+				}	
+				rejected=true;
 			}
 		}else{
 			add("Row: "+lineNr+"->Error! No options defined for option set with ID: "+optionSetId, 4);
