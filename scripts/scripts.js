@@ -1916,7 +1916,6 @@ function importDataFromDataSet(){
  * @returns
  */
 function importData(){
-
 	return new Promise(
 			function (resolve, reject) {
 
@@ -1935,12 +1934,19 @@ function importData(){
 				}).done(function(res) {						
 					add(res.message,3);
 					add(res.httpStatus,3);
-
+					
+					//number of successfully imported values
+					var ignored = res.importCount.ignored 
+					var imported = res.importCount.imported
+					var updated = res.importCount.updated
+					
 					var importSummaryArray = res.response.importSummaries;
 					var successfulImports = 0;
 					for (var i = 0; i < importSummaryArray.length; i++){
 						if(importSummaryArray[i].status === "SUCCESS"){
 							successfulImports++;
+						}else{
+							add("Error for row "+i+" : "+importSummaryArray[i].description, 4)
 						}
 					}		
 					if(successfulImports==importSummaryArray.length){
@@ -2032,7 +2038,7 @@ function importData(){
 				})
 				.fail(function (request, textStatus, errorThrown) {
 					try
-					{			
+					{		
 						add("The following request could not be processed in dryRun:"+JSON.stringify(eventDataValues), 4)
 						add("Event data import response:", 3);
 						if(isNullOrUndefined(request)){
@@ -2044,9 +2050,22 @@ function importData(){
 								reject(errorThrown);
 							}
 						}else{
-							console.log(request);
-							if(isNullOrUndefined(textStatus)){
-								console.log(textStatus);
+							if(!isNullOrUndefined(request.message)){
+								console.log(request.message);
+							}
+							if(!isNullOrUndefined(request.response.importSummaries)){
+								//write import summary for each row up to max_length
+								var max_length = 100;
+								if(request.response.importSummaries.length < max_length){
+									for(var i = 0; i < res.response.importSummaries.length;i++){
+										add("row: "+i+" error message: "+request.response.importSummaries[i].description, 3);
+									}
+								}else{
+									add("Only the import results for the first "+max_length+" of "+request.response.importSummaries.length+" are shown:", 3);
+									for(var i = 0; i < max_length;i++){
+										add("row: "+i+" error message: "+request.response.importSummaries[i].description, 3);
+									}				
+								}	
 							}
 							if(isNullOrUndefined(errorThrown)){
 								onbeforeunload();
