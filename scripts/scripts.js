@@ -2034,7 +2034,7 @@ function importData(){
 				.fail(function (request, textStatus, errorThrown) {
 					try
 					{		
-						add("The following request could not be processed in dryRun:"+JSON.stringify(eventDataValues), 4)
+						add("The request for bulk data upload for program data could not be processed in dryRun!", 4)
 						add("Event data import response:", 3);
 						
 						if(isNullOrUndefined(request)){
@@ -2051,7 +2051,7 @@ function importData(){
 								var i = 1;
 								for(let row of t.response.importSummaries){
 									console.log(row.description)
-									add("Import error description for row "+(i++)+" :"+row.description)
+									add("Import error description for row "+(i++)+" :"+row.description, 4)
 								}
 							}												
 							if(isNullOrUndefined(errorThrown)){
