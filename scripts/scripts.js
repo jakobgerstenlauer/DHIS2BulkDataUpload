@@ -98,11 +98,6 @@ obligatoryDataElementsRowLabelMap.set(1,"ReportingDate");
 obligatoryDataElementsRowLabelMap.set(2,"Latitude");
 obligatoryDataElementsRowLabelMap.set(3,"Longitude");
 
-//obligatory data elements: key: column, value: label
-var obligatoryDataElementsRowLabelMapDataSets = new Map();
-obligatoryDataElementsRowLabelMap.set(1,"Latitude");
-obligatoryDataElementsRowLabelMap.set(2,"Longitude");
-
 //Stores optionSet IDs for which a query of the options has already been sent in queryDataElement().
 var queriedOptionSets = new Set();
 
@@ -2041,6 +2036,7 @@ function importData(){
 					{		
 						add("The following request could not be processed in dryRun:"+JSON.stringify(eventDataValues), 4)
 						add("Event data import response:", 3);
+						
 						if(isNullOrUndefined(request)){
 							if(isNullOrUndefined(errorThrown)){
 								onbeforeunload();
@@ -2050,23 +2046,14 @@ function importData(){
 								reject(errorThrown);
 							}
 						}else{
-							if(!isNullOrUndefined(request.message)){
-								console.log(request.message);
-							}
-							if(!isNullOrUndefined(request.response.importSummaries)){
-								//write import summary for each row up to max_length
-								var max_length = 100;
-								if(request.response.importSummaries.length < max_length){
-									for(var i = 0; i < res.response.importSummaries.length;i++){
-										add("row: "+i+" error message: "+request.response.importSummaries[i].description, 3);
-									}
-								}else{
-									add("Only the import results for the first "+max_length+" of "+request.response.importSummaries.length+" are shown:", 3);
-									for(var i = 0; i < max_length;i++){
-										add("row: "+i+" error message: "+request.response.importSummaries[i].description, 3);
-									}				
-								}	
-							}
+							if(!isNullOrUndefined(request.responseText)){
+								var t = JSON.parse(request.responseText);
+								var i = 1;
+								for(let row of t.response.importSummaries){
+									console.log(row.description)
+									add("Import error description for row "+(i++)+" :"+row.description)
+								}
+							}												
 							if(isNullOrUndefined(errorThrown)){
 								onbeforeunload();
 								reject();
@@ -2379,22 +2366,25 @@ function processProgramData(){
 						
 					//If the geolocation is not provided only the reporting date will be checked.
 					}else{
-						if(!arrayItem.hasOwnProperty("ReportingDate")){
-							//if not, then we have to reject this line / this event 
-							add("The value of ReportingDate in column "+column+
-									" is undefined for input line "+ lineNr +" "
-									+JSON.stringify(arrayItem), 4);
-							add("Please read the log messages attentively and fix the problem! ", 4);
-							add("You may have to set the log level to \"trace\" or \"debug\".", 4);
-							rejected=true;		
-							hasErrors=true;	
+						//check the first three columns (obligatory values):
+						for (const [column, label] of obligatoryDataElementsRowLabelMap.entries()) {
+							if(!arrayItem.hasOwnProperty("ReportingDate")){
+								//if not, then we have to reject this line / this event 
+								add("The value of ReportingDate in column "+column+
+										" is undefined for input line "+ lineNr +" "
+										+JSON.stringify(arrayItem), 4);
+								add("Please read the log messages attentively and fix the problem! ", 4);
+								add("You may have to set the log level to \"trace\" or \"debug\".", 4);
+								rejected=true;		
+								hasErrors=true;	
+							}
+							if((! DateTimePattern.test(arrayItem.ReportingDate)) && (! AlternativeDateTimePattern.test(arrayItem.ReportingDate))){
+								rejected=true;		
+								hasErrors=true;
+								add("Invalid reporting date/time entered: "+ arrayItem.ReportingDate ,4);
+								add("Row: "+lineNr+"->The reporting date has to be entered in the following format: 2016-12-01T00:00:00.000 !",4);
+							}	
 						}
-						if((! DateTimePattern.test(arrayItem.ReportingDate)) && (! AlternativeDateTimePattern.test(arrayItem.ReportingDate))){
-							rejected=true;		
-							hasErrors=true;
-							add("Invalid reporting date/time entered: "+ arrayItem.ReportingDate ,4);
-							add("Row: "+lineNr+"->The reporting date has to be entered in the following format: 2016-12-01T00:00:00.000 !",4);
-						}	
 					}
 					
 					//This is the event timestamp.
@@ -2637,7 +2627,7 @@ function cleanValue(rawData, dataElement, lineNr){
  * @returns The cleaned data value.
  */
 function checkOptionSet(rawData, dataElement, lineNr){
-	
+		
 	var rejected = false;
 	var label = dataElementsLabel.get(dataElement);
 	var valueType = dataElementsValueType.get(dataElement);
@@ -2678,6 +2668,9 @@ function checkOptionSet(rawData, dataElement, lineNr){
 				case "LONG_TEXT":
 				case "TEXT":
 					rawData = String(rawData);
+					//trim strings
+					rawData = rawData.trim();
+						
 					//If the text string matches the option (upper/lower case is ignored)
 					if(rawData.toUpperCase() === option.toUpperCase()){
 						add("Row: "+lineNr+"->Value: "+rawData+" matches option "+option+"!",1);
