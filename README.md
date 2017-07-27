@@ -60,6 +60,7 @@ Note that the upload may take some time.
 |programStages|"/programStages/""+ program_stage_id +"".json?&paging=false&fields=programStageDataElements,programStageSections"|retrieveProgramStageDataElements()|Retrieves data elements of program stage endpoint.|
 |programStageSections|"/programStageSections/""+ sectionId +"".json?&paging=false&fields=programStageDataElements,displayName"|queryProgramStageSectionsInnerCall()|Retrieve the data elements associated to each program stage section.|
 |sections|"/sections/""+ sectionId +"".json?&paging=false&fields=dataElements,displayName"|queryDataSetSections()|Retrieves the data elements (ID and display name) associated to a data set section.|
+|programStageDataElements|"/programStageDataElements/""+ dataElement +"".json?&paging=false&fields=dataElement,compulsory"|queryProgramStageDataElementsInnerCall()|Retrieves Id, label, and compulsory property associated to a data element from the program stage data element endpoint.|
 |dataElements|"/dataElements/""+ dataElementId +"".json?&paging=false&fields=formName,valueType,description,optionSetValue,optionSet"|queryDataElement()|Reads label, value type, description, and hasOptionSet property of a given data element from the dataElements API.|
 |optionSets|"/optionSets/""+ optionSetId +"".json?&paging=false&fields=options"|queryOptionsInnerCall()|Read option IDs for given option set.|
 |options|"/options/""+ optionId +"".json?&paging=false&fields=displayName"|queryOption()|Retrieves the text value for a given option ID.|
@@ -69,21 +70,22 @@ Note that the upload may take some time.
 |events|/events?dryRun=false|importData()|Upload data for programs dry run|
 
 ### Dependencies and Maintainability
-This app was developed for DHIS version 2.26. There are more than 20 different calls to the DHIS2 web API (see table above). 
+This app was initially developed for DHIS version 2.26 and then later adopted to version 2.27. 
+There are more than 20 different calls to the DHIS2 web API (see table above). 
 According to the DHIS2 developer documentation: 
 ``The last three API versions will be supported. As an example, DHIS version 2.27 will support API version 27, 26 and 25. 
 Note that the metadata model is not versioned, and that you might experience changes e.g. in associations between objects. 
 These changes will be documented in the DHIS2 major version release notes.'' 
-As recommendend, I used a global variable ``baseUrl'' which includes the version number (currently 26) in the API call. 
-In theory, the API calls should be supported in DHIS2 versions 27,28, and 29. 
-However, we recently experienced problems when switching to version 27: 
+As recommendend, I used a global variable ``baseUrl'' which includes the version number (initially 26) in the API call. 
+In theory, the API calls for version 2.26 should be supported in DHIS2 versions 27,28, and 29. 
+However, when switching to version 27 some problems appeared: 
 The programStageDataElements endpoint completely disappeared in the new version (2.27) and support for older version was discontinued at the same time (compare my bug report with reference DHIS2-1939: https://jira.dhis2.org/browse/DHIS2-1939 ). 
 This indicates that changes to the DHIS2 web API have to be monitored closely before switching to a new version.	
 If the DHIS Version is updated, the following maintenance steps have to be carried out:
 1) Check if there are changes in the web API that affect the application.
 2) If there are relevant changes adapt the API calls.
 3) Update the *baseUrl* variable (marked with //TODO) in scripts.js and switch to the new version.
-In theory there should be no need to adapt the app during three consequent version updates, but it is recommendable to keep adapting the app to changes in the web API.
+Again, there should be no need to adapt the app during three consequent version updates, but it is recommendable to keep adapting the app to changes in the web API.
 			
 ### Installation: 
-This app is installed throught the DHIS2 menu normally.
+This app is installed throught the DHIS2 menu.
