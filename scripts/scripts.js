@@ -1,4 +1,4 @@
-//Update zip file: ~/workspace/Bulk Data Upload$ 7z a -tzip BulkDataUpload.zip index.html scripts/ styles/
+//Update zip file: 7z a -tzip BulkDataUpload.zip index.html scripts/ styles/
 var baseUrl;
 var apiBaseUrl;
 
