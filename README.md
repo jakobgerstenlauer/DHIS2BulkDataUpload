@@ -60,7 +60,6 @@ Note that the upload may take some time.
 |programStages|"/programStages/""+ program_stage_id +"".json?&paging=false&fields=programStageDataElements,programStageSections"|retrieveProgramStageDataElements()|Retrieves data elements of program stage endpoint.|
 |programStageSections|"/programStageSections/""+ sectionId +"".json?&paging=false&fields=programStageDataElements,displayName"|queryProgramStageSectionsInnerCall()|Retrieve the data elements associated to each program stage section.|
 |sections|"/sections/""+ sectionId +"".json?&paging=false&fields=dataElements,displayName"|queryDataSetSections()|Retrieves the data elements (ID and display name) associated to a data set section.|
-|programStageDataElements|"/programStageDataElements/""+ dataElement +"".json?&paging=false&fields=dataElement,compulsory"|queryProgramStageDataElementsInnerCall()|Retrieves Id, label, and compulsory property associated to a data element from the program stage data element endpoint.|
 |dataElements|"/dataElements/""+ dataElementId +"".json?&paging=false&fields=formName,valueType,description,optionSetValue,optionSet"|queryDataElement()|Reads label, value type, description, and hasOptionSet property of a given data element from the dataElements API.|
 |optionSets|"/optionSets/""+ optionSetId +"".json?&paging=false&fields=options"|queryOptionsInnerCall()|Read option IDs for given option set.|
 |options|"/options/""+ optionId +"".json?&paging=false&fields=displayName"|queryOption()|Retrieves the text value for a given option ID.|
